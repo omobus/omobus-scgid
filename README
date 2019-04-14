@@ -1,0 +1,45 @@
+omobus-scgid: OMOBUS scgi server.
+
+
+1. About omobus-scgid
+---------------------
+
+OMOBUS scgi server is a special environment for executing lua scripts that
+used for generating interactive content. Executed Lua script isolates in 
+the special jail (chroot environment) for secure reasons.
+
+
+2.  Building omobus-scgid
+-------------------------
+
+It is as simple as:
+
+    % make
+    or
+    % make install
+
+By default, omobus-scgid will copy the binary files in the /usr/local/. You 
+can also use "make PREFIX=/some/other/directory install" if you wish to use 
+a different destination.
+
+For more information:
+
+    % make help
+
+
+3. Buliding using tcmalloc
+--------------------------
+
+tcmalloc is a fast and space efficient implementation (for little objects)
+of malloc(). Compiling omobus-scgid with it can improve performances and memeory
+usage. You can read more about it here:
+
+http://goog-perftools.sourceforge.net/doc/tcmalloc.html
+
+In order to compile omobus-scgid with tcmalloc support install tcmalloc on your 
+system and then use:
+
+    % make USE_TCMALLOC=yes
+
+Note that you can pass any other target to make, as long as you append
+USE_TCMALLOC=yes at the end.

@@ -1,0 +1,23 @@
+bind_pgsql(1)
+=============
+
+
+NAME
+----
+bind_pgsql - omobus-scgid simple interface from Lua to the PostgreSQL server.
+
+DESCRIPTION
+-----------
+*bind_pgsql* is a simple interface from Lua to an PostgeSQL client, in fact it is a 
+bind to PostgreSQL client. Most of the functions defined in the PostgreSQL client API
+library (_libpq_) are available via this binding. For more information, please, see
+original PostgreSQL documentation: <http://www.postgresql.org/docs/9.2/static/libpq.html>.
+
+SEE ALSO
+--------
+*omobus-scgid*(1), <http://omobus.org/>, <http://www.lua.org/manual/5.2/> 
+<http://www.postgresql.org/docs/9.2/static/libpq.html>
+
+AUTHOR
+------
+Igor Artemov <i_artemov@omobus.net>

@@ -1,0 +1,91 @@
+base64.o: base64.c base64.h
+bind_dummy.o: bind_dummy.c lua.h luaconf.h luaaux.h
+bind_ldap.o: bind_ldap.c lua.h luaconf.h luaaux.h
+bind_pgsql.o: bind_pgsql.c lua.h luaconf.h luaaux.h
+bind_tds.o: bind_tds.c lua.h luaconf.h luaaux.h omobus-scgid.h \
+
+connect_timed.o: connect_timed.c connect_timed.h omobus-scgid.h
+crc32.o: crc32.c crc32.h
+crc64.o: crc64.c crc64.h
+dynarray.o: dynarray.c dynarray.h
+ftp.o: ftp.c connect_timed.h lsdir.h dynarray.h hashtable.h fwrite_safe.h \
+ tls.h ftp.h omobus-scgid.h
+fwrite_safe.o: fwrite_safe.c fwrite_safe.h omobus-scgid.h
+hashtable.o: hashtable.c crc64.h xxhash.h hashtable.h
+l_api.o: l_api.c lua.h luaconf.h l_api.h l_limits.h l_state.h l_object.h \
+ l_tm.h l_zio.h l_mem.h l_debug.h l_do.h l_func.h l_gc.h l_string.h \
+ l_table.h l_undump.h l_vm.h
+l_aux.o: l_aux.c lua.h luaconf.h luaaux.h
+l_code.o: l_code.c lua.h luaconf.h l_code.h l_lex.h l_object.h l_limits.h \
+ l_zio.h l_mem.h l_opcodes.h l_parser.h l_debug.h l_state.h l_tm.h l_do.h \
+ l_gc.h l_string.h l_table.h l_vm.h
+l_ctype.o: l_ctype.c l_prefix.h l_ctype.h lua.h luaconf.h l_limits.h
+l_debug.o: l_debug.c lua.h luaconf.h l_api.h l_limits.h l_state.h \
+ l_object.h l_tm.h l_zio.h l_mem.h l_code.h l_lex.h l_opcodes.h \
+ l_parser.h l_debug.h l_do.h l_func.h l_string.h l_gc.h l_table.h l_vm.h
+l_do.o: l_do.c lua.h luaconf.h l_api.h l_limits.h l_state.h l_object.h \
+ l_tm.h l_zio.h l_mem.h l_debug.h l_do.h l_func.h l_gc.h l_opcodes.h \
+ l_parser.h l_string.h l_table.h l_undump.h l_vm.h
+l_dump.o: l_dump.c lua.h luaconf.h l_object.h l_limits.h l_state.h l_tm.h \
+ l_zio.h l_mem.h l_undump.h
+l_func.o: l_func.c lua.h luaconf.h l_func.h l_object.h l_limits.h l_gc.h \
+ l_state.h l_tm.h l_zio.h l_mem.h
+l_gc.o: l_gc.c lua.h luaconf.h l_debug.h l_state.h l_object.h l_limits.h \
+ l_tm.h l_zio.h l_mem.h l_do.h l_func.h l_gc.h l_string.h l_table.h
+l_lex.o: l_lex.c lua.h luaconf.h l_ctype.h l_limits.h l_debug.h l_state.h \
+ l_object.h l_tm.h l_zio.h l_mem.h l_do.h l_gc.h l_lex.h l_parser.h \
+ l_string.h l_table.h
+l_mem.o: l_mem.c lua.h luaconf.h l_debug.h l_state.h l_object.h \
+ l_limits.h l_tm.h l_zio.h l_mem.h l_do.h l_gc.h
+l_object.o: l_object.c lua.h luaconf.h l_ctype.h l_limits.h l_debug.h \
+ l_state.h l_object.h l_tm.h l_zio.h l_mem.h l_do.h l_string.h l_gc.h \
+ l_vm.h
+l_opcodes.o: l_opcodes.c l_opcodes.h l_limits.h lua.h luaconf.h
+l_parser.o: l_parser.c lua.h luaconf.h l_code.h l_lex.h l_object.h \
+ l_limits.h l_zio.h l_mem.h l_opcodes.h l_parser.h l_debug.h l_state.h \
+ l_tm.h l_do.h l_func.h l_string.h l_gc.h l_table.h
+l_state.o: l_state.c lua.h luaconf.h l_api.h l_limits.h l_state.h \
+ l_object.h l_tm.h l_zio.h l_mem.h l_debug.h l_do.h l_func.h l_gc.h \
+ l_lex.h l_string.h l_table.h
+l_string.o: l_string.c lua.h luaconf.h l_debug.h l_state.h l_object.h \
+ l_limits.h l_tm.h l_zio.h l_mem.h l_do.h l_string.h l_gc.h
+l_table.o: l_table.c lua.h luaconf.h l_debug.h l_state.h l_object.h \
+ l_limits.h l_tm.h l_zio.h l_mem.h l_do.h l_gc.h l_string.h l_table.h \
+ l_vm.h
+l_tm.o: l_tm.c lua.h luaconf.h l_debug.h l_state.h l_object.h l_limits.h \
+ l_tm.h l_zio.h l_mem.h l_do.h l_string.h l_gc.h l_table.h l_vm.h
+l_undump.o: l_undump.c lua.h luaconf.h l_debug.h l_state.h l_object.h \
+ l_limits.h l_tm.h l_zio.h l_mem.h l_do.h l_func.h l_string.h l_gc.h \
+ l_undump.h
+l_vm.o: l_vm.c lua.h luaconf.h l_debug.h l_state.h l_object.h l_limits.h \
+ l_tm.h l_zio.h l_mem.h l_do.h l_func.h l_gc.h l_opcodes.h l_string.h \
+ l_table.h l_vm.h
+l_zio.o: l_zio.c lua.h luaconf.h l_limits.h l_mem.h l_state.h l_object.h \
+ l_tm.h l_zio.h
+lib_base.o: lib_base.c lua.h luaconf.h luaaux.h
+lib_bzip2.o: lib_bzip2.c lua.h luaconf.h luaaux.h
+lib_coro.o: lib_coro.c l_prefix.h lua.h luaconf.h luaaux.h
+lib_debug.o: lib_debug.c lua.h luaconf.h luaaux.h
+lib_ftp.o: lib_ftp.c ftp.h omobus-scgid.h lua.h luaconf.h luaaux.h
+lib_hash.o: lib_hash.c crc32.h crc64.h md5.h sha1.h base64.h lua.h \
+ luaconf.h luaaux.h
+lib_iconv.o: lib_iconv.c lua.h luaconf.h luaaux.h
+lib_json.o: lib_json.c omobus-scgid.h lua.h luaconf.h luaaux.h
+lib_math.o: lib_math.c lua.h luaconf.h luaaux.h
+lib_os.o: lib_os.c lua.h luaconf.h luaaux.h
+lib_package.o: lib_package.c lua.h luaconf.h luaaux.h
+lib_string.o: lib_string.c strtrim.h lua.h luaconf.h luaaux.h
+lib_table.o: lib_table.c lua.h luaconf.h luaaux.h
+lib_utf8.o: lib_utf8.c l_prefix.h lua.h luaconf.h luaaux.h
+lib_zlib.o: lib_zlib.c lua.h luaconf.h luaaux.h
+lsdir.o: lsdir.c lsdir.h omobus-scgid.h
+make_abstimeout.o: make_abstimeout.c make_abstimeout.h
+md5.o: md5.c md5.h
+memdup.o: memdup.c memdup.h
+omobus-scgid.o: omobus-scgid.c omobus-scgid.h setproctitle.h \
+ make_abstimeout.h lua.h luaconf.h luaaux.h
+setproctitle.o: setproctitle.c setproctitle.h
+sha1.o: sha1.c sha1.h
+strtrim.o: strtrim.c strtrim.h
+tls.o: tls.c tls.h memdup.h omobus-scgid.h
+xxhash.o: xxhash.c xxhash.h

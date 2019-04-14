@@ -1,0 +1,23 @@
+bind_tds(1)
+===========
+
+
+NAME
+----
+bind_tds - omobus-scgid simple interface from Lua to the Microsoft SQL Server server.
+
+DESCRIPTION
+-----------
+*bind_tds* is a simple interface from Lua to an TDS client library, in fact it is a 
+bind to Microsoft SQL Server client. Most of the functions defined in the TDS client API
+library (_FreeTDS_) are available via this binding. For more information, please, see
+original TDS documentation: L<http://technet.microsoft.com/en-us/library/aa936985(v=sql.80).aspx>.
+
+SEE ALSO
+--------
+*omobus-scgid*(1), <http://omobus.org/>, <http://www.lua.org/manual/5.2/>,
+<http://technet.microsoft.com/en-us/library/aa936985(v=sql.80).aspx>
+
+AUTHOR
+------
+Igor Artemov <i_artemov@omobus.net>

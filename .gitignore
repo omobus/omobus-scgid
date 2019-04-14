@@ -1,0 +1,6 @@
+*.o
+*.so*
+*.a
+*.t
+package_params.h
+omobus-scgid

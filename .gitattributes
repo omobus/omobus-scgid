@@ -1,0 +1,9 @@
+*.sh -crlf
+*.c -crlf
+*.cpp -crlf
+*.h -crlf
+AUTHORS -crlf
+ChangeLog -crlf
+COPYRIGHT -crlf
+README -crlf
+.git* -crlf

@@ -1,0 +1,16 @@
+# Copyright (c) 2006 - 2019 omobus-scgid authors, see the included COPYRIGHT file.
+
+# Uncomment to change default prefix (/usr/local/omobus)
+PREFIX		?= /usr/local
+
+# Use thread-caching malloc (experimental).
+USE_TCMALLOC	?= no
+
+# Build OpenLDAP binding module.
+USE_LDAP 	?= yes
+
+# Build PostgeSQL binding module.
+USE_PGSQL	?= yes
+
+# Build Microsoft SQL Server over FreeTDS binding module.
+USE_TDS		?= no

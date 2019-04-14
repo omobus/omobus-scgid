@@ -1,0 +1,279 @@
+omobus-scgid(1)
+===============
+
+
+NAME
+----
+omobus-scgid - scgi environment for executing server-side Lua scripts.
+
+SYNOPSIS
+--------
+omobus-scgid [OPTIONS] -s unixsock script
+
+DESCRIPTION
+-----------
+*omobus-scgid* is a special scgi server for executing interactive server-side Lua 
+scripts in the special environment based on the Lua 5.2 engine. For security reasons
+not all Lua 5.2 functions are available in the *omobus-scgid* environment.
+
+OPTIONS
+-------
+*sript*::
+    Lua script (see. *LUA SCRIPT* section for more information).
+
+*-s unixsock*::
+    Unix socket name.
+
+*-c jaildir*::
+    chroot environment directory.
+
+*-d*::
+    Start *omobus-scgid* in the debug mode: without daemonize and redirect logs to the stdout.
+
+*-x*::
+    Start *omobus-scgid* in the systemd mode: without daemonize.
+
+*-g gid*::
+    group (id or name) to run as.
+
+*-n evname*::
+    GC semaphore name;
+
+*-p pifile*::
+    pid-file name.
+
+*-t timeout*::
+    GC execution timeout;
+
+*-u uid*::
+    user (id or name) to run as.
+
+*-V*::
+    print version and compile options.
+
+LUA SCRIPT
+----------
+First off all, *omobus-scgid* supports most (exept several I<unsafe and unsecure>) 
+of the base Lua 5.2 functions that described on the official site <http://www.lua.org/manual/5.2/>.
+In addition *omobus-scgid* implements special build-in functions, predefine lua 
+libraries and bindings.
+
+Executed Lua scripts should contain startup function B<websvc_main> that returns
+function table or nil on error. Function table contains _request_handler_ and _gc_
+parameres. _gc_ is optional.
+
+websvc_main example
+~~~~~~~~~~~~~~~~~~~
+ local scgi=require 'scgi'
+
+ function websvc_main()
+    return {
+      request_handler = function(B<env>, B<content_size>, B<content>, B<res>)
+          scgi.writeHeader(res, 200, 
+             {["Content-Type"] = "text/plain; charset=utf-8"})
+          scgi.writeBody(res, "Test")
+      end,
+      gc = function()
+      end
+    }
+ end
+
+Request handler function execute all input client request. Request parameters are 
+set in the _env_ (SCGI/HTTP environment variables as key/value Lua table), 
+_content_size_ and _content_ (request content) input values. _content_ may by a
+nil value if it is not exist in the request.
+
+Response writes to the _res_ parameter (response stream) using special build-in 
+functions *responseWrite*, *responseTruncate* or *scgi.writeHeader*, *scgi.writeBody*.
+
+On success request handler returns 0 (if I<res> parameter contains valid scgi response) 
+otherwise -1 (in tis case response writed to the I<res> parameter ignored).
+
+Unsave and unsecure Lua functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For security reasons this functions not available in the *omobus-scgid* environment:
+_dofile_, _loadstring_, _loadfile_, all _io_ functions) and _os_ functions exept _os.date_, 
+_os.time_, _os.difftime_.
+
+All other Lua functions available without any limitations.
+
+BUILD-IN functions
+~~~~~~~~~~~~~~~~~~
+*iif(exp, ontrue, onfalse)*::
+    Returns _ontrue_ if _exp_ is true otherwise returns _onfalse_.
+
+*responseWrite(res, string)*::
+    Writes string to the response stream.
+
+*responseTruncate(res)*::
+    Truncates response stream.
+
+*log_msg(string)*, *log_warn(string)*, *log_error(string)*::
+    Writes message to the *omobus-scgid* journal.
+
+*hash.crc32()*, *hash.crc64()*, *hash.md5()*, *hash.sha1()*::
+    Initializes a CRC32/CRC64/MD5/SHA1 checksum calcalator.
+
+*crc32:calc(buf)*, *crc64:calc(buf)*::
+    Caclculates _buf> checksum.
+
+*crc32:get()*, *crc64:get()*::
+    Returns a hex representing the hash.
+
+*md5:update(buf)*, *sha1:update(buf)*::
+    Caclculates _buf> checksum.
+
+*md5:final([binary_result])*, *sha1:final([binary_result])*::
+    Returns a hex or binnary representing the hash.
+
+*hash.md5_digest_size()*, *hash.sha1_digest_size()*::
+    Returns binnary digest size in bytes.
+
+*base64.encode(buf [, line_size])*::
+    Converts buffer to base64 encoding.
+
+*base64.decode(str)*::
+    Converts input string in base64 encoding to the original data.
+
+*iconv.open(to, from)*, *iconv.new(to, from)*::
+    Opens a new conversion descriptor, from the _from> charset to the _to> charset. 
+    Concatenating "//TRANSLIT" to the first argument will enable character transliteration 
+    and concatenating "//IGNORE" to the first argument will cause iconv to ignore 
+    any invalid characters found in the input string.
+
+    This function returns a new converter or nil on error.
+
+*iconv:iconv(str)*::
+
+    Converts the _str> string to the desired charset. This method always returns 
+    two arguments: the converted string and an error code, which may have any of 
+    the following values:
+
+    * nil
+	No error. Conversion was successful.
+
+    * iconv.ERROR_NO_MEMORY
+	Failed to allocate enough memory in the conversion process.
+
+    * iconv.ERROR_INVALID
+	An invalid character was found in the input sequence.
+
+    * iconv.ERROR_INCOMPLETE
+	An incomplete character was found in the input sequence.
+
+    * iconv.ERROR_FINALIZED
+	Trying to use an already-finalized converter. This usually means that the user 
+	was tweaking the garbage collector private methods.
+
+    * iconv.ERROR_UNKNOWN
+	There was an unknown error.
+
+*iconv:close()*::
+    Close conversion descriptor.
+
+*zlib.deflate([level, window_size]), *zlib.inflate([window_size])*::
+    Open compress (_deflate_) or decompress (_inflate_) zlib stream. Compression 
+    rate sets using _level_ parameter, where 0 is no compression and 9 is max 
+    compression. For more information see <http://www.zlib.net/>.
+
+*deflate:set(string)*, *deflate:finish(string)*::
+    Sets _string_ to the compress stream. Returns compressed data, end of stream 
+    flag, original and compressed data size. Function _finish_ closes the compression
+    stream.
+
+*inflate:set(string)*, *inflate:finish(string)*::
+    Sets _string_ to the decompress stream. Returns decompressed data, end of stream 
+    flag, original and decompressed data size. Function _finish_ closes the decompression
+    stream.
+
+*bzlib.compress([level, work_factor]), *bzlib.decompress([small])*::
+    Open compress or decompress bzzip2 stream. Compression rate sets using _level_
+    parameter, where 0 is no compression and 9 is max compression. For more information 
+    see <http://www.bzip.org/>.
+
+*compress:set(string)*, *compress:finish(string)*::
+    Sets _string_ to the compress stream. Returns compressed data, end of stream 
+    flag, original and compressed data size. Function _finish_ closes the compression
+    stream.
+
+*decompress:set(string)*, *decompress:finish(string)*::
+    Sets _string_ to the decompress stream. Returns decompressed data, end of stream 
+    flag, original and decompressed data size. Function _finish_ closes the decompression
+    stream.
+
+*json|json_safe:encode(tb)*, *json|json_safe:decode(string)*::
+    Encodes and decodes json string to/from lua table as described in the RFC-4627. If
+    error occures _json_ breaks script execution, otherwise _json_safe_ returns error
+    message as second return parameter.
+
+*scgi.writeHeader(stream, code, params)*::
+    Writes response header with HTTP _code_ and _params_ to the _stream_. All the 
+    existing in the stream data will be truncated. _params_ is a key/value array 
+    that describes HTTP header.
+
+*scgi.writeBody(stream, str)*::
+    Writes HTTP body stryng to the response *stream_.
+
+*url.buildQuery(tab, sep, key)*::
+    Build query string from _tab_ key/value parameters. Separator and parent key is 
+    optional. Returns a string representing the built querystring.
+
+*url.parseQuery(str, sep)*::
+    Parses the querystring to a table. This function can parse multi-dimensional pairs 
+    like ?param[key]=value. Separator is optional (defaults is '&'). Returns a table 
+    represanting the query.
+
+*url.parse(url)*::
+    Parse the *url* into the designated parts.  Depending on the url, the following 
+    parts can be available: scheme, userinfo, user, password, authority, host, port, 
+    path, query, fragment. Returns a table with the different parts and a few other 
+    functions.
+
+*url.removeDotSegments(path)*::
+    Removes dots and slashes in urls when possible. This function will also remove 
+    multiple slashes. _path> is a string representing the path to clean. Returns
+    a string of the path without unnecessary dots and segments.
+
+*url:build()*::
+    Builds the url. Returns a string representing the built url.
+
+*url:setQuery(query)*::
+    Sets the url query. Input value can be a string to parse or a table of key/value 
+    pairs. Returns a table representing the query key/value pairs.
+
+*url:setAuthority(authority)*::
+    Sets the _authority_ part (as a string) of the url. The authority is parsed to 
+    find the user, password, port and host if available. Returns a string with what 
+    remains after the authority was parsed.
+
+*url:resolve(other)*::
+    Builds a new url by using the one given as parameter and resolving paths. Returns
+    a new url table.
+
+*url:normalize()*::
+    Normalize a url path following some common normalization rules described on the 
+    URL normalization page of Wikipedia (<http://en.wikipedia.org/wiki/URL_normalization>).
+    Returns a normalized path.
+
+Predefine Lua bindings
+~~~~~~~~~~~~~~~~~~~~~~
+*bind_ldap*::
+    A simple interface from Lua to the OpenLDAP server. See *bind_ldap*(1) manual page
+    for more information.
+
+*bind_pgsql*::
+    An interface from Lua to the PostgreSQL server. See *bind_pgsql*(1) manual page for 
+    more information.
+
+*bind_tds*::
+    An interface from Lua to the Microsoft SQL server. See *bind_tds*(1) manual page for 
+    more information.
+
+
+SEE ALSO
+--------
+*bind_ldap*(1), *bind_pgsql*(1), *bind_tds*(1), <http://omobus.org/>, <http://www.lua.org/manual/5.2/>
+
+AUTHOR
+------
+Igor Artemov <i_artemov@omobus.net>

@@ -1,0 +1,365 @@
+'\" t
+.\"     Title: bind_ldap
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 09/22/2015
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "BIND_LDAP" "1" "09/22/2015" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+bind_ldap \- omobus\-scgid simple interface from Lua to the OpenLDAP server
+.SH "DESCRIPTION"
+.sp
+\fBbind_ldap\fR is a simple interface from Lua to an LDAP client, in fact it is a bind to OpenLDAP client\&. \fBbind_ldap\fR define \fIopen_simple\fR function to create a LDAP connection object\&.
+.sp
+A connection object offers methods to perform any operation on the directory such as comparing values, adding new entries, modifying attributes on existing entries, removing entries, and the most common of all: searching\&. Entries are represented as Lua tables; attributes are its fields\&. The attribute values can be strings or tables of strings (used to represent multiple values)\&.
+.sp
+Many LDAP operations manage sets of attributes and values\&. \fBbind_ldap\fR provides a uniform way of representing them by using Lua tables\&. The table attributes can be Lua string, a binary string (a string of bits), or table of <em>n</em> values indexed from 1 to n\&. Some operations have different approaches that will be explained as necessary\&.
+.sp
+Here is a simple example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+entry = {
+   an_attribute = "a value",
+   other_attribute = {
+       "first value of other attribute",
+       "another value of other attribute",
+   },
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Attribute names cannot contain the \fI\e0\fR character\&.
+.sp
+The distinguished name (DN) is the term used to identify an entry on the directory information tree\&. It is formed by the relative distinguished name (RDN) of the entry and the distinguished name of its parent\&. LuaLDAP will always use a string to represent the DN of any entry\&. A more precise definition can be found on the LDAP documentation\&.
+.SH "FUNCTIONS"
+.sp
+\fBbind_ldap\fR provides a single way to connect to an LDAP server:
+.PP
+\fBopen_simple(uri, bind_dn, bind_pw, use_tls)\fR
+.RS 4
+Initializes a session with a LDAP server\&. This function requires a
+\fIuri\fR,
+\fIbind_dn\fR
+and
+\fIbind_pw\fR\&. The uri parameter may be a comma\- or whitespace\-separated list of URIs containing only the schema, the host, and the port fields\&. The optional argument
+\fIuse_tls\fR
+is a boolean flag indicating if Transport Layer Security (TLS) should be used\&. Returns a connection object if the operation was successful\&. In case of error it returns
+\fInil\fR
+followed by an error string\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+A connection object offers methods which implement LDAP operations\&. Almost all of
+them need a distinguished name to identify the entry on which the operation will
+be executed\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+These methods execute asynchronous operations and return a function that should
+be called to obtain the results\&. The called functions will return I<true> indicating
+the success of the operation\&. The only exception is the B<compare> function which
+can return either I<true> or I<false> (as the result of the comparison) on a
+successful operation\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+There are two types of errors: _API errors_, such as wrong parameters,
+absent connection etc\&.; and LDAP errors, such as malformed DN, unknown attribute
+etc\&. API errors will raise a Lua error, while LDAP errors will be reported by the
+function/method returning nil plus the error message provided by the OpenLDAP client\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fBconn:add(distinguished_name, table_of_attributes)\fR
+.RS 4
+Adds a new entry to the directory with the given attributes and values\&.
+.RE
+.PP
+\fBconn:close()\fR
+.RS 4
+Closes the connection I<conn>\&.
+.RE
+.PP
+\fBconn:compare(distinguished_name, attribute, value)\fR
+.RS 4
+Compares a value to an entry\&.
+.RE
+.PP
+\fBconn:delete(distinguished_name)\fR
+.RS 4
+Deletes an entry from the directory\&.
+.RE
+.PP
+\fBconn:modify(distinguished_name, table_of_operations)\fR
+.RS 4
+Changes the values of attributes in the given entry\&. The tables of operations are tables of attributes with the value on index I<1> indicating the operation to be performed\&. The valid operations are:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+a) *\*(Aq+\*(Aq* \- to add the values to the attributes;
+b) *\*(Aq\-\*(Aq* \- to delete the values of the attributes;
+c) *\*(Aq=\*(Aq* \- to replace the values of the attributes\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Any number of tables of operations will be used in a single LDAP modify operation\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fBconn:rename(distinguished_name, new_relative_dn, new_parent)\fR
+.RS 4
+Changes an entry name (i\&.e\&. change its distinguished name)\&.
+.RE
+.PP
+\fBconn:search(table_of_search_parameters)\fR
+.RS 4
+Performs a search operation on the directory\&. The parameters are described below:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+1) *attrs*
+        A string or a list of attribute names to be retrieved (default is to retrieve all
+        attributes)\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+2) *attrsonly*
+        A boolean value that must be either I<false> (default) if both attribute names
+        and values are to be retrieved, or I<true> if only names are wanted\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+3) *base*
+        The distinguished name of the entry at which to start the search\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+4) *filter*
+        A string representing the search filter as described in The String Representation
+        of LDAP Search Filters (RFC 2254) [L<http://www\&.ietf\&.org/rfc/rfc2254\&.txt>]\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+5) *scope*
+        A string indicating the scope of the search\&. The valid strings are: "base",
+        "onelevel" and "subtree"\&. The empty string ("") and I<nil> will be treated as
+        the default scope\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+6) *sizelimit*
+        The maximum number of entries to return (default is no limit)\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+7) *timeout*
+        The timeout in seconds (default is no timeout)\&. The precision is microseconds\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The search method will return a _search iterator_ which is a function that
+requires no arguments\&. The search iterator is used to get the search result and
+will return a string representing the distinguished name and a table of attributes
+as returned by the search request\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "EXAMPLES"
+.sp
+Here is a some sample code that demonstrate the basic use of the library\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+local ldap = require "bind_ldap"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+local ld = assert(dap\&.open_simple("ldap://127\&.0\&.0\&.1:389",
+               "mydn=manoeljoaquim,ou=people,dc=ldap,dc=world",
+               "mysecurepassword"))
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+for dn, attribs in ld:search { base = "ou=people,dc=ldap,dc=world" } do
+   scgi\&.writeBody(res, string\&.format ("\et[%s]\en", dn))
+   for name, values in pairs (attribs) do
+       scgi\&.writeBody(res, "["\&.\&.name\&.\&."] : ")
+       if type (values) == "string" then
+           scgi\&.writeBody(res, values)
+       elseif type (values) == "table" then
+           local n = #values
+           for i = 1, (n\-1) do
+               scgi\&.writeBody(res, values[i]\&.\&.",")
+           end
+           scgi\&.writeBody(res, values[n])
+       end
+       scgi\&.writeBody(res, "\en")
+   end
+end
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ld:add ("mydn=newuser,ou=people,dc=ldap,dc=world", {
+   objectClass = { "", "", },
+   mydn = "newuser",
+   abc = "qwerty",
+   tel = { "123456758", "98765432", },
+   givenName = "New User",
+})()
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ld:modify {"mydn=newuser,ou=people,dc=ldp,dc=world",
+   { \*(Aq=\*(Aq, givenName = "New", cn = "New", sn = "User", },
+   { \*(Aq+\*(Aq, o = { "University", "College", },
+          mail = "newuser@university\&.edu", },
+   { \*(Aq\-\*(Aq, abc = true, tel = "123456758", },
+   { \*(Aq+\*(Aq, tel = "13579113", },
+}()
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ld:delete ("mydn=newuser,ou=people,dc=ldp,dc=world")()
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+\fBomobus\-scgid\fR(1), http://omobus\&.org/, http://www\&.lua\&.org/manual/5\&.2/, http://www\&.openldap\&.org
+.SH "AUTHOR"
+.sp
+Igor Artemov <i_artemov@ak\-obs\&.ru>

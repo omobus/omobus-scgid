@@ -1,0 +1,446 @@
+'\" t
+.\"     Title: omobus-scgid
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 09/22/2015
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "OMOBUS\-SCGID" "1" "09/22/2015" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+omobus-scgid \- scgi environment for executing server\-side Lua scripts\&.
+.SH "SYNOPSIS"
+.sp
+omobus\-scgid [OPTIONS] \-s unixsock script
+.SH "DESCRIPTION"
+.sp
+\fBomobus\-scgid\fR is a special scgi server for executing interactive server\-side Lua scripts in the special environment based on the Lua 5\&.2 engine\&. For security reasons not all Lua 5\&.2 functions are available in the \fBomobus\-scgid\fR environment\&.
+.SH "OPTIONS"
+.PP
+\fBsript\fR
+.RS 4
+Lua script (see\&.
+\fBLUA SCRIPT\fR
+section for more information)\&.
+.RE
+.PP
+\fB\-s unixsock\fR
+.RS 4
+Unix socket name\&.
+.RE
+.PP
+\fB\-c jaildir\fR
+.RS 4
+chroot environment directory\&.
+.RE
+.PP
+\fB\-g gid\fR
+.RS 4
+group (id or name) to run as\&.
+.RE
+.PP
+\fB\-n evname\fR
+.RS 4
+GC semaphore name;
+.RE
+.PP
+\fB\-p pifile\fR
+.RS 4
+pid\-file name\&.
+.RE
+.PP
+\fB\-t timeout\fR
+.RS 4
+GC execution timeout;
+.RE
+.PP
+\fB\-u uid\fR
+.RS 4
+user (id or name) to run as\&.
+.RE
+.PP
+\fB\-V\fR
+.RS 4
+print version and compile options\&.
+.RE
+.SH "LUA SCRIPT"
+.sp
+First off all, \fBomobus\-scgid\fR supports most (exept several I<unsafe and unsecure>) of the base Lua 5\&.2 functions that described on the official site http://www\&.lua\&.org/manual/5\&.2/\&. In addition \fBomobus\-scgid\fR implements special build\-in functions, predefine lua libraries and bindings\&.
+.sp
+Executed Lua scripts should contain startup function B<websvc_main> that returns function table or nil on error\&. Function table contains \fIrequest_handler\fR and \fIgc\fR parameres\&. \fIgc\fR is optional\&.
+.SS "websvc_main example"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+local scgi=require \*(Aqscgi\*(Aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+function websvc_main()
+   return {
+     request_handler = function(B<env>, B<content_size>, B<content>, B<res>)
+         scgi\&.writeHeader(res, 200,
+            {["Content\-Type"] = "text/plain; charset=utf\-8"})
+         scgi\&.writeBody(res, "Test")
+     end,
+     gc = function()
+     end
+   }
+end
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Request handler function execute all input client request\&. Request parameters are set in the \fIenv\fR (SCGI/HTTP environment variables as key/value Lua table), \fIcontent_size\fR and \fIcontent\fR (request content) input values\&. \fIcontent\fR may by a nil value if it is not exist in the request\&.
+.sp
+Response writes to the \fIres\fR parameter (response stream) using special build\-in functions \fBresponseWrite\fR, \fBresponseTruncate\fR or \fBscgi\&.writeHeader\fR, \fBscgi\&.writeBody\fR\&.
+.sp
+On success request handler returns 0 (if I<res> parameter contains valid scgi response) otherwise \-1 (in tis case response writed to the I<res> parameter ignored)\&.
+.SS "Unsave and unsecure Lua functions"
+.sp
+For security reasons this functions not available in the \fBomobus\-scgid\fR environment: \fIdofile\fR, \fIloadstring\fR, \fIloadfile\fR, \fIos\&.execute\fR, \fIos\&.exit\fR, \fIos\&.getenv\fR, \fIos\&.setlocale\fR, \fIos\&.tmpname\fR, \fIio\&.close\fR, \fIio\&.flush\fR, \fIio\&.input\fR, \fIio\&.lines\fR, \fIio\&.output\fR, \fIio\&.popen\fR, \fIio\&.read\fR, \fIio\&.write\fR, \fIio\&.type\fR, \fIfile:lines\fR, \fIfile:setvbuf\fR,
+.sp
+All other Lua functions available without any limitations\&.
+.SS "BUILD\-IN functions"
+.PP
+\fBiif(exp, ontrue, onfalse)\fR
+.RS 4
+Returns
+\fIontrue\fR
+if
+\fIexp\fR
+is true otherwise returns
+\fIonfalse\fR\&.
+.RE
+.PP
+\fBresponseWrite(res, string)\fR
+.RS 4
+Writes string to the response stream\&.
+.RE
+.PP
+\fBresponseTruncate(res)\fR
+.RS 4
+Truncates response stream\&.
+.RE
+.PP
+\fBlog_msg(string)\fR, \fBlog_warn(string)\fR, \fBlog_error(string)\fR
+.RS 4
+Writes message to the
+\fBomobus\-scgid\fR
+journal\&.
+.RE
+.PP
+\fBhash\&.crc32()\fR, \fBhash\&.crc64()\fR, \fBhash\&.md5()\fR, \fBhash\&.sha1()\fR
+.RS 4
+Initializes a CRC32/CRC64/MD5/SHA1 checksum calcalator\&.
+.RE
+.PP
+\fBcrc32:calc(buf)\fR, \fBcrc64:calc(buf)\fR
+.RS 4
+Caclculates _buf> checksum\&.
+.RE
+.PP
+\fBcrc32:get()\fR, \fBcrc64:get()\fR
+.RS 4
+Returns a hex representing the hash\&.
+.RE
+.PP
+\fBmd5:update(buf)\fR, \fBsha1:update(buf)\fR
+.RS 4
+Caclculates _buf> checksum\&.
+.RE
+.PP
+\fBmd5:final([binary_result])\fR, \fBsha1:final([binary_result])\fR
+.RS 4
+Returns a hex or binnary representing the hash\&.
+.RE
+.PP
+\fBhash\&.md5_digest_size()\fR, \fBhash\&.sha1_digest_size()\fR
+.RS 4
+Returns binnary digest size in bytes\&.
+.RE
+.PP
+\fBbase64\&.encode(buf [, line_size])\fR
+.RS 4
+Converts buffer to base64 encoding\&.
+.RE
+.PP
+\fBbase64\&.decode(str)\fR
+.RS 4
+Converts input string in base64 encoding to the original data\&.
+.RE
+.PP
+\fBiconv\&.open(to, from)\fR, \fBiconv\&.new(to, from)\fR
+.RS 4
+Opens a new conversion descriptor, from the _from> charset to the _to> charset\&. Concatenating "//TRANSLIT" to the first argument will enable character transliteration and concatenating "//IGNORE" to the first argument will cause iconv to ignore any invalid characters found in the input string\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+This function returns a new converter or nil on error\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fBiconv:iconv(str)\fR
+.RS 4
+Converts the _str> string to the desired charset\&. This method always returns two arguments: the converted string and an error code, which may have any of the following values:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+nil No error\&. Conversion was successful\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+iconv\&.ERROR_NO_MEMORY Failed to allocate enough memory in the conversion process\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+iconv\&.ERROR_INVALID An invalid character was found in the input sequence\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+iconv\&.ERROR_INCOMPLETE An incomplete character was found in the input sequence\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+iconv\&.ERROR_FINALIZED Trying to use an already\-finalized converter\&. This usually means that the user was tweaking the garbage collector private methods\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+iconv\&.ERROR_UNKNOWN There was an unknown error\&.
+.RE
+.RE
+.PP
+\fBiconv:close()\fR
+.RS 4
+Close conversion descriptor\&.
+.RE
+.PP
+\fBzlib\&.deflate([level, window_size]), *zlib\&.inflate([window_size])\fR
+.RS 4
+Open compress (\fIdeflate\fR) or decompress (\fIinflate\fR) zlib stream\&. Compression rate sets using
+\fIlevel\fR
+parameter, where 0 is no compression and 9 is max compression\&. For more information see
+http://www\&.zlib\&.net/\&.
+.RE
+.PP
+\fBdeflate:set(string)\fR, \fBdeflate:finish(string)\fR
+.RS 4
+Sets
+\fIstring\fR
+to the compress stream\&. Returns compressed data, end of stream flag, original and compressed data size\&. Function
+\fIfinish\fR
+closes the compression stream\&.
+.RE
+.PP
+\fBinflate:set(string)\fR, \fBinflate:finish(string)\fR
+.RS 4
+Sets
+\fIstring\fR
+to the decompress stream\&. Returns decompressed data, end of stream flag, original and decompressed data size\&. Function
+\fIfinish\fR
+closes the decompression stream\&.
+.RE
+.PP
+\fBbzlib\&.compress([level, work_factor]), *bzlib\&.decompress([small])\fR
+.RS 4
+Open compress or decompress bzzip2 stream\&. Compression rate sets using
+\fIlevel\fR
+parameter, where 0 is no compression and 9 is max compression\&. For more information see
+http://www\&.bzip\&.org/\&.
+.RE
+.PP
+\fBcompress:set(string)\fR, \fBcompress:finish(string)\fR
+.RS 4
+Sets
+\fIstring\fR
+to the compress stream\&. Returns compressed data, end of stream flag, original and compressed data size\&. Function
+\fIfinish\fR
+closes the compression stream\&.
+.RE
+.PP
+\fBdecompress:set(string)\fR, \fBdecompress:finish(string)\fR
+.RS 4
+Sets
+\fIstring\fR
+to the decompress stream\&. Returns decompressed data, end of stream flag, original and decompressed data size\&. Function
+\fIfinish\fR
+closes the decompression stream\&.
+.RE
+.PP
+\fBjson|json_safe:encode(tb)\fR, \fBjson|json_safe:decode(string)\fR
+.RS 4
+Encodes and decodes json string to/from lua table as described in the RFC\-4627\&. If error occures
+\fIjson\fR
+breaks script execution, otherwise
+\fIjson_safe\fR
+returns error message as second return parameter\&.
+.RE
+.PP
+\fBscgi\&.writeHeader(stream, code, params)\fR
+.RS 4
+Writes response header with HTTP
+\fIcode\fR
+and
+\fIparams\fR
+to the
+\fIstream\fR\&. All the existing in the stream data will be truncated\&.
+\fIparams\fR
+is a key/value array that describes HTTP header\&.
+.RE
+.PP
+\fBscgi\&.writeBody(stream, str)\fR
+.RS 4
+Writes HTTP body stryng to the response *stream_\&.
+.RE
+.PP
+\fBurl\&.buildQuery(tab, sep, key)\fR
+.RS 4
+Build query string from
+\fItab\fR
+key/value parameters\&. Separator and parent key is optional\&. Returns a string representing the built querystring\&.
+.RE
+.PP
+\fBurl\&.parseQuery(str, sep)\fR
+.RS 4
+Parses the querystring to a table\&. This function can parse multi\-dimensional pairs like ?param[key]=value\&. Separator is optional (defaults is
+\fI&\fR)\&. Returns a table represanting the query\&.
+.RE
+.PP
+\fBurl\&.parse(url)\fR
+.RS 4
+Parse the
+\fBurl\fR
+into the designated parts\&. Depending on the url, the following parts can be available: scheme, userinfo, user, password, authority, host, port, path, query, fragment\&. Returns a table with the different parts and a few other functions\&.
+.RE
+.PP
+\fBurl\&.removeDotSegments(path)\fR
+.RS 4
+Removes dots and slashes in urls when possible\&. This function will also remove multiple slashes\&. _path> is a string representing the path to clean\&. Returns a string of the path without unnecessary dots and segments\&.
+.RE
+.PP
+\fBurl:build()\fR
+.RS 4
+Builds the url\&. Returns a string representing the built url\&.
+.RE
+.PP
+\fBurl:setQuery(query)\fR
+.RS 4
+Sets the url query\&. Input value can be a string to parse or a table of key/value pairs\&. Returns a table representing the query key/value pairs\&.
+.RE
+.PP
+\fBurl:setAuthority(authority)\fR
+.RS 4
+Sets the
+\fIauthority\fR
+part (as a string) of the url\&. The authority is parsed to find the user, password, port and host if available\&. Returns a string with what remains after the authority was parsed\&.
+.RE
+.PP
+\fBurl:resolve(other)\fR
+.RS 4
+Builds a new url by using the one given as parameter and resolving paths\&. Returns a new url table\&.
+.RE
+.PP
+\fBurl:normalize()\fR
+.RS 4
+Normalize a url path following some common normalization rules described on the URL normalization page of Wikipedia (http://en\&.wikipedia\&.org/wiki/URL_normalization)\&. Returns a normalized path\&.
+.RE
+.SS "Predefine Lua bindings"
+.PP
+\fBbind_ldap\fR
+.RS 4
+A simple interface from Lua to the OpenLDAP server\&. See
+\fBbind_ldap\fR(1) manual page for more information\&.
+.RE
+.PP
+\fBbind_pgsql\fR
+.RS 4
+An interface from Lua to the PostgreSQL server\&. See
+\fBbind_pgsql\fR(1) manual page for more information\&.
+.RE
+.PP
+\fBbind_tds\fR
+.RS 4
+An interface from Lua to the Microsoft SQL server\&. See
+\fBbind_tds\fR(1) manual page for more information\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBbind_ldap\fR(1), \fBbind_pgsql\fR(1), \fBbind_tds\fR(1), http://omobus\&.org/, http://www\&.lua\&.org/manual/5\&.2/
+.SH "AUTHOR"
+.sp
+Igor Artemov <i_artemov@ak\-obs\&.ru>
