@@ -1,5 +1,5 @@
 /* -*- C -*- */
-/* This file is a part of the omobusd project.
+/* This file is a part of the omobus-scgid project.
  * Major portions taken verbatim or adapted from the Lua interpreter.
  * Copyright (C) 1994-2015 Lua.org, PUC-Rio. See Copyright Notice in COPYRIGHT.Lua.
  */
