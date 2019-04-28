@@ -1,8 +1,7 @@
 /* -*- C -*- */
-/* Copyright (c) 2006 - 2019 omobus-scgid authors, see the included COPYRIGHT file.
- *
- ** Major portions taken verbatim or adapted from the Lua interpreter.
- ** Copyright (C) 1994-2015 Lua.org, PUC-Rio. See Copyright Notice in COPYRIGHT.Lua.
+/* This file is a part of the omobusd project.
+ * Major portions taken verbatim or adapted from the Lua interpreter.
+ * Copyright (C) 1994-2015 Lua.org, PUC-Rio. See Copyright Notice in COPYRIGHT.Lua.
  */
 
 #define lctype_c
