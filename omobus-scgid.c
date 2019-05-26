@@ -70,6 +70,7 @@ LUAMOD_API int luaopen_zlib(lua_State *L);
 LUAMOD_API int luaopen_bzlib(lua_State *L);
 LUAMOD_API int luaopen_json(lua_State *L);
 LUAMOD_API int luaopen_json_safe(lua_State *L);
+LUAMOD_API int luaopen_sock(lua_State *L);
 
 static const luaL_Reg loadedlibs[] = {
     { "_G", luaopen_base },
@@ -86,6 +87,7 @@ static const luaL_Reg loadedlibs[] = {
     { "json", luaopen_json },
     { "json_safe", luaopen_json_safe },
     { "ftp", luaopen_ftp },
+    { "sock", luaopen_sock },
     { NULL, NULL }
 };
 

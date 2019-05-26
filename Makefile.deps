@@ -74,6 +74,8 @@ lib_json.o: lib_json.c omobus-scgid.h lua.h luaconf.h luaaux.h
 lib_math.o: lib_math.c lua.h luaconf.h luaaux.h
 lib_os.o: lib_os.c lua.h luaconf.h luaaux.h
 lib_package.o: lib_package.c lua.h luaconf.h luaaux.h
+lib_sock.o: lib_sock.c omobus-scgid.h connect_timed.h tls.h lua.h \
+ luaconf.h luaaux.h
 lib_string.o: lib_string.c strtrim.h lua.h luaconf.h luaaux.h
 lib_table.o: lib_table.c lua.h luaconf.h luaaux.h
 lib_utf8.o: lib_utf8.c l_prefix.h lua.h luaconf.h luaaux.h
