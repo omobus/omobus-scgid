@@ -13,7 +13,7 @@ CHMOD		= chmod -v
 
 CURRENT_DATE 	:= $(shell sh -c 'date +%Y-%m-%d')
 PACKAGE_NAME 	= omobus-scgid
-PACKAGE_VERSION = 3.4.6
+PACKAGE_VERSION = 3.4.7
 COPYRIGHT 	= Copyright (c) 2006 - 2019 ak obs, ltd. <support@omobus.net>
 SUPPORT 	= Support and bug reports: <support@omobus.net>
 AUTHOR		= Author: Igor Artemov <i_artemov@omobus.net>
@@ -62,7 +62,7 @@ L_CORE_OBJ	= l_api.o l_code.o l_ctype.o l_debug.o l_do.o l_dump.o l_func.o l_gc.
 L_LIBS_OBJ	= fwrite_safe.o crc32.o crc64.o md5.o sha1.o xxhash.o base64.o strtrim.o dynarray.o hashtable.o \
 		  memdup.o connect_timed.o lsdir.o tls.o ftp.o \
 		  lib_base.o lib_utf8.o lib_debug.o lib_math.o lib_string.o lib_table.o lib_coro.o lib_package.o \
-		  lib_os.o lib_iconv.o lib_hash.o lib_zlib.o lib_bzip2.o lib_json.o lib_ftp.o 
+		  lib_os.o lib_iconv.o lib_hash.o lib_zlib.o lib_bzip2.o lib_json.o lib_ftp.o lib_sock.o
 OMOBUS_SCGID_OBJ= omobus-scgid.o setproctitle.o make_abstimeout.o
 BIND_DUMMY_OBJ	= bind_dummy.o
 BIND_LDAP_OBJ	= bind_ldap.o
