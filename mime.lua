@@ -150,6 +150,7 @@ return {
   mpeg = "video/mpeg",
   mpg = "video/mpeg",
   mpe = "video/mpeg",
+  mp4 = 'video/mp4',
   qt = "video/quicktime",
   mov = "video/quicktime",
   mxu = "video/vnd.mpegurl",
