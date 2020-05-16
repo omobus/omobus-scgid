@@ -1,5 +1,5 @@
 /* -*- H -*- */
-/* Copyright (c) 2006 - 2019 omobus-scgid authors, see the included COPYRIGHT file. */
+/* Copyright (c) 2006 - 2020 omobus-scgid authors, see the included COPYRIGHT file. */
 
 #ifndef __SHA1_H__
 #define __SHA1_H__ 1

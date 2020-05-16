@@ -1,5 +1,5 @@
 /* -*- C -*- */
-/* Copyright (c) 2006 - 2019 omobus-scgid authors, see the included COPYRIGHT file. */
+/* Copyright (c) 2006 - 2020 omobus-scgid authors, see the included COPYRIGHT file. */
 
 #include <ctype.h>
 #include <stdlib.h>
