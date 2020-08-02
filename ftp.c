@@ -1122,8 +1122,10 @@ int ftp_clear_dir(ftp_ctx_t ctx)
     fn = buf;
     while( rc == OMOBUS_OK && *fn != '\0' && (tmp = strchr(fn, '\n')) != NULL ) {
 	*tmp = '\0'; tmp++;
-	if( strcmp(fn, OMOBUS_FF_UNLOCKED) != 0 ) {
-	    rc = ftp_dele(ctx, fn);
+	if( !(strcmp(fn, ".") == 0 || strcmp(fn, "..") == 0) ) {
+	    if( strcmp(fn, OMOBUS_FF_UNLOCKED) != 0 ) {
+		rc = ftp_dele(ctx, fn);
+	    }
 	}
 	fn = tmp;
     }
@@ -1251,8 +1253,10 @@ int ftp_push_dir_DIFF(ftp_ctx_t p, const char *path, const char *ftp_path)
 	}
 	while( rc == OMOBUS_OK && *fn != '\0' && len > 0 && (tmp = strchr(fn, '\n')) != NULL ) {
 	    *tmp = '\0'; tmp++;
-	    if( strcmp(fn, OMOBUS_FF_UNLOCKED) != 0 ) {
-		rc = slist_set(ar[1], fn);
+	    if( !(strcmp(fn, ".") == 0 || strcmp(fn, "..") == 0) ) {
+		if( strcmp(fn, OMOBUS_FF_UNLOCKED) != 0 ) {
+		    rc = slist_set(ar[1], fn);
+		}
 	    }
 	    fn = tmp;
 	}
@@ -1352,8 +1356,10 @@ int ftp_pull_dir_DIFF(ftp_ctx_t p, const char *ftp_path, const char *path, void 
 	}
 	while( rc == OMOBUS_OK && *fn != '\0' && len > 0 && (tmp = strchr(fn, '\n')) != NULL ) {
 	    *tmp = '\0'; tmp++;
-	    if( strcmp(fn, OMOBUS_FF_UNLOCKED) != 0 ) {
-		rc = slist_set(ar[1], fn);
+	    if( !(strcmp(fn, ".") == 0 || strcmp(fn, "..") == 0) ) {
+		if( strcmp(fn, OMOBUS_FF_UNLOCKED) != 0 ) {
+		    rc = slist_set(ar[1], fn);
+		}
 	    }
 	    fn = tmp;
 	}
