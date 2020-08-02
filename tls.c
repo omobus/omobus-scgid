@@ -31,7 +31,7 @@
 #endif
 
 #define JPREFIX 		OMOBUS_JPREFIX
-#define TLS_CIPHERS_DEFAULT	"TLSv1.2+AEAD+ECDHE:TLSv1.2+AEAD+DHE"
+#define TLS_CIPHERS_DEFAULT	"TLSv1.3:TLSv1.2+ECDHE:TLSv1.2+DHE"
 #define TLS_CIPHERS_COMPAT	"HIGH:!aNULL"
 #define TLS_CIPHERS_LEGACY	"HIGH:MEDIUM:!aNULL"
 #define TLS_CIPHERS_ALL		"ALL:!aNULL:!eNULL"
@@ -129,8 +129,6 @@ void tls_config_set_ciphers(tls_config_t ptr, const char *ciphers)
 	    ciphers = TLS_CIPHERS_DEFAULT;
 	} else if (strcasecmp(ciphers, "compat") == 0 ) {
 	    ciphers = TLS_CIPHERS_COMPAT;
-	} else if (strcasecmp(ciphers, "compat") == 0) {
-	    ciphers = TLS_CIPHERS_COMPAT;
 	} else if (strcasecmp(ciphers, "legacy") == 0) {
 	    ciphers = TLS_CIPHERS_LEGACY;
 	} else if (strcasecmp(ciphers, "all") == 0 || strcasecmp(ciphers, "insecure") == 0) {
@@ -217,8 +215,7 @@ uint32_t tls_parse_protocols(const char *protostr)
 	    proto = TLS_PROTOCOLS_ALL;
 	} else if( strcasecmp(p, "default") == 0 || strcasecmp(p, "secure") == 0 ) {
 	    proto = TLS_PROTOCOLS_DEFAULT;
-	}
-	if( strcasecmp(p, "tlsv1") == 0 ) {
+	} else if( strcasecmp(p, "tlsv1") == 0 ) {
 	    proto = TLS_PROTOCOL_TLSv1;
 	} else if( strcasecmp(p, "tlsv1.0") == 0 ) {
 	    proto = TLS_PROTOCOL_TLSv1_0;
@@ -226,6 +223,8 @@ uint32_t tls_parse_protocols(const char *protostr)
 	    proto = TLS_PROTOCOL_TLSv1_1;
 	} else if( strcasecmp(p, "tlsv1.2") == 0 ) {
 	    proto = TLS_PROTOCOL_TLSv1_2;
+	} else if( strcasecmp(p, "tlsv1.3") == 0 ) {
+	    proto = TLS_PROTOCOL_TLSv1_3;
 	}
 	if (proto == 0) {
 	    free(s);
@@ -315,6 +314,7 @@ int tls_configure_ssl(tls_t ses)
     SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1);
     SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_1);
     SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_2);
+    SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_3);
 
     if( (ctx->config->protocols & TLS_PROTOCOL_TLSv1_0) == 0 ) {
 	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1);
@@ -324,6 +324,9 @@ int tls_configure_ssl(tls_t ses)
     }
     if( (ctx->config->protocols & TLS_PROTOCOL_TLSv1_2) == 0 ) {
 	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_2);
+    }
+    if( (ctx->config->protocols & TLS_PROTOCOL_TLSv1_3) == 0 ) {
+	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_3);
     }
     if( ctx->config->ciphers != NULL ) {
 	if( SSL_CTX_set_cipher_list(ctx->ssl_ctx, ctx->config->ciphers) != 1 ) {
