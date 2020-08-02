@@ -13,7 +13,7 @@ CHMOD		= chmod -v
 
 CURRENT_DATE 	:= $(shell sh -c 'date +%Y-%m-%d')
 PACKAGE_NAME 	= omobus-scgid
-PACKAGE_VERSION = 3.5.1
+PACKAGE_VERSION = 3.5.2
 COPYRIGHT 	= Copyright (c) 2006 - 2020 ak obs, ltd. <support@omobus.net>
 SUPPORT 	= Support and bug reports: <support@omobus.net>
 AUTHOR		= Author: Igor Artemov <i_artemov@omobus.net>
