@@ -31,7 +31,11 @@
 #endif
 
 #define JPREFIX 		OMOBUS_JPREFIX
-#define TLS_CIPHERS_DEFAULT	"TLSv1.3:TLSv1.2+ECDHE:TLSv1.2+DHE"
+#if (OPENSSL_VERSION_NUMBER >= 0x10101000L)
+# define TLS_CIPHERS_DEFAULT	"TLSv1.3:TLSv1.2+ECDHE:TLSv1.2+DHE"
+#else
+# define TLS_CIPHERS_DEFAULT	"TLSv1.2+ECDHE:TLSv1.2+DHE"
+#endif //OPENSSL_VERSION_NUMBER >= 0x10101000L
 #define TLS_CIPHERS_COMPAT	"HIGH:!aNULL"
 #define TLS_CIPHERS_LEGACY	"HIGH:MEDIUM:!aNULL"
 #define TLS_CIPHERS_ALL		"ALL:!aNULL:!eNULL"
@@ -223,8 +227,10 @@ uint32_t tls_parse_protocols(const char *protostr)
 	    proto = TLS_PROTOCOL_TLSv1_1;
 	} else if( strcasecmp(p, "tlsv1.2") == 0 ) {
 	    proto = TLS_PROTOCOL_TLSv1_2;
+#if (OPENSSL_VERSION_NUMBER >= 0x10101000L)
 	} else if( strcasecmp(p, "tlsv1.3") == 0 ) {
 	    proto = TLS_PROTOCOL_TLSv1_3;
+#endif //OPENSSL_VERSION_NUMBER >= 0x10101000L
 	}
 	if (proto == 0) {
 	    free(s);
