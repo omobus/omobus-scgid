@@ -11,8 +11,6 @@
 #define OMOBUS_OK 			0
 #define OMOBUS_ERR 			-1
 
-#define OMOBUS_FF_UNLOCKED		"__unlocked__"
-
 #ifndef SOCKET_ERROR
 # define SOCKET_ERROR			(-1)
 #endif //SOCKET_ERROR
