@@ -320,7 +320,9 @@ int tls_configure_ssl(tls_t ses)
     SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1);
     SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_1);
     SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_2);
+#if (OPENSSL_VERSION_NUMBER >= 0x10101000L)
     SSL_CTX_clear_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_3);
+#endif //OPENSSL_VERSION_NUMBER >= 0x10101000L
 
     if( (ctx->config->protocols & TLS_PROTOCOL_TLSv1_0) == 0 ) {
 	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1);
@@ -331,9 +333,12 @@ int tls_configure_ssl(tls_t ses)
     if( (ctx->config->protocols & TLS_PROTOCOL_TLSv1_2) == 0 ) {
 	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_2);
     }
+#if (OPENSSL_VERSION_NUMBER >= 0x10101000L)
     if( (ctx->config->protocols & TLS_PROTOCOL_TLSv1_3) == 0 ) {
 	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_NO_TLSv1_3);
     }
+#endif //OPENSSL_VERSION_NUMBER >= 0x10101000L
+
     if( ctx->config->ciphers != NULL ) {
 	if( SSL_CTX_set_cipher_list(ctx->ssl_ctx, ctx->config->ciphers) != 1 ) {
 	    logmsg_e(JPREFIX "failed to set ciphers: %s.", ctx->config->ciphers);
