@@ -1,5 +1,5 @@
 /* -*- H -*- */
-/* Copyright (c) 2006 - 2020 omobus-scgid authors, see the included COPYRIGHT file. */
+/* Copyright (c) 2006 - 2021 omobus-scgid authors, see the included COPYRIGHT file. */
 
 #ifndef __setproctitle_h__
 #define __setproctitle_h__

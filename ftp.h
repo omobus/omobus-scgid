@@ -1,5 +1,5 @@
 /* -*- H -*- */
-/* Copyright (c) 2006 - 2020 omobus-scgid authors, see the included COPYRIGHT file. */
+/* Copyright (c) 2006 - 2021 omobus-scgid authors, see the included COPYRIGHT file. */
 
 #ifndef __ftp_h__
 #define __ftp_h__

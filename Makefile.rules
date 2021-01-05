@@ -1,4 +1,4 @@
-# Copyright (c) 2006 - 2020 omobus-scgid authors, see the included COPYRIGHT file.
+# Copyright (c) 2006 - 2021 omobus-scgid authors, see the included COPYRIGHT file.
 
 # Uncomment to change default prefix (/usr/local/omobus)
 PREFIX		?= /usr/local

@@ -1,4 +1,4 @@
-# Copyright (c) 2006 - 2020 omobus-scgid authors, see the included COPYRIGHT file.
+# Copyright (c) 2006 - 2021 omobus-scgid authors, see the included COPYRIGHT file.
 
 include Makefile.rules
 
@@ -13,8 +13,8 @@ CHMOD		= chmod -v
 
 CURRENT_DATE 	:= $(shell sh -c 'date +%Y-%m-%d')
 PACKAGE_NAME 	= omobus-scgid
-PACKAGE_VERSION = 3.5.4
-COPYRIGHT 	= Copyright (c) 2006 - 2020 ak obs, ltd. <support@omobus.net>
+PACKAGE_VERSION = 3.5.5
+COPYRIGHT 	= Copyright (c) 2006 - 2021 ak obs, ltd. <support@omobus.net>
 SUPPORT 	= Support and bug reports: <support@omobus.net>
 AUTHOR		= Author: Igor Artemov <i_artemov@omobus.net>
 BUGREPORT	= support@omobus.net
