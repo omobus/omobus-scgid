@@ -7,10 +7,11 @@ function scgi.writeHeader(stream, code, params)
     responseTruncate(stream)
     responseWrite(stream, string.format("Status: %d\r\n", code))
     if params ~= nil then
-    for key, value in pairs(params) do
-        responseWrite(stream, string.format("%s: %s\r\n", key, value))
+	for key, value in pairs(params) do
+	    responseWrite(stream, string.format("%s: %s\r\n", key, value))
+	end
     end
-    end
+    responseWrite(stream, "Permissions-Policy: interest-cohort=()\r\n")
     responseWrite(stream, "\r\n")
 end
 
