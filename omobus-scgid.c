@@ -1284,7 +1284,7 @@ const char *getswd(const char *script, char *buf, size_t size)
 
 int main(int argc, char**argv)
 {
-    char unixsock[255] = "", pidfile[255] = "", script[255] = "", jaildir[255] = "", 
+    char unixsock[108] = "", pidfile[255] = "", script[255] = "", jaildir[255] = "", 
 	homedir[255] = "", gc_evname[255] = "";
     short daemonize = 1, debug = 0;
     int opt = -1, fd = -1, rc = 0, gc_pid = -1;
