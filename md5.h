@@ -1,5 +1,5 @@
 /* -*- H -*- */
-/* Copyright (c) 2006 - 2021 omobus-scgid authors, see the included COPYRIGHT file. */
+/* Copyright (c) 2006 - 2022 omobus-scgid authors, see the included COPYRIGHT file. */
 
 #ifndef __md5_h__
 #define __md5_h__

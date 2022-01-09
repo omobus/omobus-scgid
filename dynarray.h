@@ -1,5 +1,5 @@
 /* -*- H -*- */
-/* Copyright (c) 2006 - 2021 omobus-scgid authors, see the included COPYRIGHT file. */
+/* Copyright (c) 2006 - 2022 omobus-scgid authors, see the included COPYRIGHT file. */
 
 #ifndef __dynarray_h__
 #define __dynarray_h__

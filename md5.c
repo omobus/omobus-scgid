@@ -1,5 +1,5 @@
 /* -*- C -*- */
-/* Copyright (c) 2006 - 2021 omobus-scgid authors, see the included COPYRIGHT file. */
+/* Copyright (c) 2006 - 2022 omobus-scgid authors, see the included COPYRIGHT file. */
 
 /* Original code created by Colin Plumb, Jim Kingdon, Kurt D. Zeilenga.
  * Test: "123456789" ==> 25f9e794323b453885f5181f1b624d0b
