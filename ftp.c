@@ -417,8 +417,23 @@ ftp_ctx_t ftp_connect(FILE *log, const char *host, unsigned int port, unsigned i
     addr.sin_addr.s_addr = inet_addr(host);
     if( addr.sin_addr.s_addr == INADDR_NONE ) {
 	if( (ent = gethostbyname(host)) == NULL ) {
-	    logmsg_e(JPREFIX "Invalid server address %s or port %u.", 
-		host, port);
+	    static const char _HOST_NOT_FOUND[] = "The specified host is unknown";
+	    static const char _NO_DATA[] = "The requested name is valid but does not have an IP address";
+	    static const char _NO_RECOVERY[] = "A nonrecoverable name server error occurred";
+	    static const char _TRY_AGAIN[] = "A temporary error occurred on an authoritative name server";
+	    static const char _UNKNOWN_ERROR[] = "Unexpected error";
+	    const char *t = _UNKNOWN_ERROR;
+	    if( h_errno == HOST_NOT_FOUND ) {
+		t = _HOST_NOT_FOUND;
+	    } else if( h_errno == NO_DATA ) {
+		t = _NO_DATA;
+	    } else if( h_errno == NO_RECOVERY ) {
+		t = _NO_RECOVERY;
+	    } else if( h_errno == TRY_AGAIN ) {
+		t = _TRY_AGAIN;
+	    }
+	    logmsg_e(JPREFIX "Unable to get network host entry using [gethostbyname] for %s: %s.", 
+		host, t);
 	    ftp_disconnect(ctx);
 	    return NULL;
 	} else {
