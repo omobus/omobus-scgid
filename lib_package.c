@@ -372,9 +372,9 @@ LUAMOD_API int luaopen_package (lua_State *L)
     createsearcherstable(L);
     lua_setfield(L, -2, "searchers");  /* put it in field 'searchers' */
     /* set field 'path' */
-    setpath(L, "path", LUA_PATH_DEFAULT);
+    //setpath(L, "path", LUA_PATH_DEFAULT);
     /* set field 'cpath' */
-    setpath(L, "cpath", LUA_CPATH_DEFAULT);
+    //setpath(L, "cpath", LUA_CPATH_DEFAULT);
     /* store config information */
     lua_pushliteral(L, LUA_DIRSEP "\n" LUA_PATH_SEP "\n" LUA_PATH_MARK "\n"
 	LUA_IGMARK "\n");
