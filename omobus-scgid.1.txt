@@ -255,6 +255,12 @@ BUILD-IN functions
     URL normalization page of Wikipedia (<http://en.wikipedia.org/wiki/URL_normalization>).
     Returns a normalized path.
 
+*uuid.seed()*::
+    Seeds the UUID random generator.
+
+*uuid.new()*::
+    Generates UUID value.
+
 Predefine Lua bindings
 ~~~~~~~~~~~~~~~~~~~~~~
 *bind_ldap*::

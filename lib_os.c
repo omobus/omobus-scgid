@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #define LUA_LIB
 #include "lua.h"
@@ -151,7 +152,14 @@ static int os_difftime(lua_State *L) {
   return 1;
 }
 
+static int os_getpid(lua_State *L) 
+{
+    lua_pushnumber(L, (lua_Number) getpid());
+    return 1;
+}
+
 static const luaL_Reg lib_funcs[] = {
+    { "getpid", os_getpid},
     { "date", os_date},
     { "time", os_time},
     { "difftime", os_difftime},
