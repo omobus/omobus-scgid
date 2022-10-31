@@ -192,9 +192,7 @@ void logmsg_i(const char *fmt, ...) {
 
 static
 void logmsg_d(const char *fmt, ...) {
-#ifdef _DEBUG
     logmsg_x(LOG_DEBUG);
-#endif //_DEBUG
 }
 
 static
