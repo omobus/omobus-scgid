@@ -161,17 +161,23 @@ char prioritytext(int priority)
 static
 void vlogmsg(int priority, const char *fmt, va_list ap)
 {
-    char *format;
+    char *format = NULL;
     if( stdout == NULL || stderr == NULL ) {
-	vsyslog(priority, fmt, ap);
-    } else {
-	format = NULL;
-	if( asprintf(&format, "%c/%s\n", prioritytext(priority), fmt) != -1 && format != NULL ) {
-	    if( vfprintf(priority == LOG_ERR ? stderr : stdout, format, ap) > 0 ) {
-		fflush(priority == LOG_ERR ? stderr : stdout);
-	    }
-	    free(format);
+	if( asprintf(&format, "%c/%s", prioritytext(priority), fmt) != -1 && format != NULL ) {
+	    vsyslog(priority, format, ap);
+	} else {
+	    vsyslog(priority, fmt, ap);
 	}
+    } else {
+	if( asprintf(&format, "%c/%s\n", prioritytext(priority), fmt) != -1 && format != NULL ) {
+	    if( vfprintf(priority == LOG_ERR || priority == LOG_WARNING ? stderr : stdout, format, ap) > 0 ) {
+		fflush(priority == LOG_ERR || priority == LOG_WARNING ? stderr : stdout);
+	    }
+	}
+    }
+    if( format != NULL ) {
+	free(format);
+	format = NULL;
     }
 }
 
