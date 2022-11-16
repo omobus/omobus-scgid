@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <unistd.h>
 
 #include "connect_timed.h"
@@ -1026,6 +1027,94 @@ int ftp_stor(ftp_ctx_t p, const char *fn, ftp_stor_cb cb, void *cookie)
     return OMOBUS_OK;
 }
 
+int ftp_stor_mem(ftp_ctx_t p, const char *fn, const char *buf, int size)
+{
+    ftp_ctx *ctx;
+    unsigned short newport;
+    int r, s, a = 0, chunk = 1024*16, z, x = size;
+    const char *ptr, *ref = buf;
+    ftp_sock_t sock;
+
+    memset(&sock, 0, sizeof(ftp_sock_t));
+    sock.sockfd = SOCKET_ERROR;
+
+    if( (ctx = (ftp_ctx *) p) == NULL || fn == NULL || ctx->tr_err || buf == NULL || size <= 0 ) {
+	return OMOBUS_ERR;
+    }
+    if( (newport = ctx->epsv?ftp_epsv(p):ftp_pasv(p)) == 0 ) {
+	logmsg_e(JPREFIX "%s@%s:%u unable to enter to the passive mode.", 
+	    ctx->user, ctx->host, ctx->port);
+	return OMOBUS_ERR;
+    }
+    if( ctx->ascii != 0 ) {
+	if( ftp_cmd(ctx, ftp_msg("TYPE I")) == OMOBUS_ERR || ftp_code(ctx) != 200 ) {
+	    logmsg_e(JPREFIX "%s@%s:%u unable to switch result type to the binnary mode.", 
+		ctx->user, ctx->host, ctx->port);
+	    return OMOBUS_ERR;
+	}
+	ctx->ascii = 0;
+    }
+    if( ftp_sendarg(ctx, ftp_msg("STOR %s"), fn) == OMOBUS_ERR ) {
+	logmsg_e(JPREFIX "%s@%s:%u unable to send STOR request.", 
+	    ctx->user, ctx->host, ctx->port);
+	return OMOBUS_ERR;
+    }
+    if( (sock.sockfd = ftp_connect_passive(ctx, newport)) == SOCKET_ERROR ) {
+	logmsg_e(JPREFIX "%s@%s:%u unable to create passive connection.", 
+	    ctx->user, ctx->host, newport);
+	return OMOBUS_ERR;
+    }
+    if( ftp_recv(ctx) == OMOBUS_ERR || ftp_code2(ctx, &a) != 150 ) {
+	logmsg_e(JPREFIX "%s@%s:%u unable to get STOR response (data channel at %u port).", 
+	    ctx->user, ctx->host, ctx->port, newport);
+	ftp_disconnect_passive(ctx->log, &sock);
+	return OMOBUS_ERR;
+    }
+    if( ctx->pdc ) {
+	if( (sock.tlsses = tls_new(ctx->tls_config)) == NULL || 
+	    tls_connect_reuse_session(sock.tlsses, sock.sockfd, ctx->host, ctx->sock.tlsses) != OMOBUS_OK ) 
+	{
+	    ftp_disconnect_passive(ctx->log, &sock);
+	    ctx->tr_err = 1;
+	    return OMOBUS_ERR;
+	}
+#ifdef FTP_TRACE
+	if( ctx->log != NULL ) {
+	    fprintf(ctx->log, "*: protected data channel %s with %s, %u secret bits cipher\n",
+		tls_protocol(ctx->sock.tlsses), tls_ciphername(ctx->sock.tlsses), tls_cipherbits(ctx->sock.tlsses));
+	}
+#endif //FTP_TRACE
+    }
+
+    while( x > 0 ) {
+	ptr = ref; z = r = MIN(chunk, x);
+	while( r > 0 && (s = sock_send(&sock, ptr, r)) > 0 ) {
+	    r -= s; ptr += s;
+	}
+	if( s < 0 || r != 0 ) {
+	    logmsg_e(JPREFIX "%s:%u unable to send %s file to the server.", 
+		ctx->host, newport, fn);
+	    ftp_disconnect_passive(ctx->log, &sock);
+	    return OMOBUS_ERR;
+	}
+	ref += z; x -= z;
+    }
+    ftp_disconnect_passive(ctx->log, &sock);
+
+    if( a == 0 ) {
+	if( ftp_recv(ctx) == OMOBUS_OK ) {
+	    a = ftp_code(ctx);
+	}
+    }
+    if( a != 226 ) {
+	logmsg_e(JPREFIX "%s@%s:%u invalid STOR response (after sending data).", 
+	    ctx->user, ctx->host, ctx->port);
+	return OMOBUS_ERR;
+    }
+
+    return OMOBUS_OK;
+}
+
 int ftp_stor_f(ftp_ctx_t p, const char *f_fn, const char *l_fn)
 {
     FILE *f = NULL;
@@ -1119,6 +1208,40 @@ int ftp_stor_f_safe(ftp_ctx_t p, const char *f_fn, const char *l_fn)
 	rc = ftp_stor_safe(p, f_fn, stor_cb, f, (int) st.st_size);
     }
     chk_fclose(f);
+
+    return rc;
+}
+
+int ftp_stor_mem_safe(ftp_ctx_t p, const char *fn, const char *buf, int size)
+{
+    ftp_ctx *ctx = NULL;
+    char *t_fn = NULL;
+    int rc = OMOBUS_ERR, x = OMOBUS_ERR;
+
+    if( (ctx = (ftp_ctx *) p) == NULL || fn == NULL || size < 0 || ctx->tr_err ) {
+	return rc;
+    }
+    if( asprintf(&t_fn, "%s.t", fn) == -1 || t_fn == NULL ) {
+	allocate_memory_error(strerror(errno));
+	return rc;
+    }
+    if( ftp_stor_mem(p, t_fn, buf, size) == OMOBUS_ERR ) {
+	logmsg_e(JPREFIX "Unable to store file '%s'.", 
+	    t_fn);
+    } else if( (x = ftp_size(p, t_fn)) < 0 ) {
+	logmsg_e(JPREFIX "Unable to get stored file size. Original: %d bytes. File: %s",
+	    size, t_fn);
+    } else if( size != x ) {
+	logmsg_e(JPREFIX "Ugly stored file size. Original: %d bytes. Server: %d bytes. File: %s", 
+	    size, x, t_fn);
+    } else if( ftp_rename(p, t_fn, fn) == OMOBUS_ERR ) {
+	logmsg_e(JPREFIX "Unable to rename file: %s %s.", 
+	    t_fn, fn);
+    } else {
+	rc = OMOBUS_OK;
+    }
+
+    chk_free(t_fn);
 
     return rc;
 }

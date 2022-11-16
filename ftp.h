@@ -33,8 +33,10 @@ int ftp_retr_f(ftp_ctx_t p, const char *fn, const char *l_fn);
 int ftp_retr_mem(ftp_ctx_t p, const char *fn, char **buf, size_t *size);
 int ftp_stor(ftp_ctx_t p, const char *fn, ftp_stor_cb cb, void *cookie);
 int ftp_stor_f(ftp_ctx_t p, const char *f_fn, const char *l_fn);
+int ftp_stor_mem(ftp_ctx_t p, const char *fn, const char *buf, int size);
 int ftp_stor_safe(ftp_ctx_t p, const char *fn, ftp_stor_cb cb, void *cookie, int size);
 int ftp_stor_f_safe(ftp_ctx_t p, const char *f_fn, const char *l_fn);
+int ftp_stor_mem_safe(ftp_ctx_t p, const char *fn, const char *buf, int size);
 int ftp_size(ftp_ctx_t p, const char *fn);
 int ftp_rename(ftp_ctx_t p, const char *fn_from, const char *fn_to);
 
