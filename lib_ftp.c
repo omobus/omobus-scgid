@@ -127,6 +127,19 @@ static int luaftp_retr(lua_State *L)
     return 2;
 }
 
+static int luaftp_stor(lua_State *L)
+{
+    ftp_ctx_t *data;
+    if( (data = (ftp_ctx_t *) luaL_checkudata(L, 1, FTP_METATABLE)) != NULL && *data != NULL &&
+	ftp_stor_mem_safe(*data, luaL_checkstring(L, 2), (const char *) luaL_checkstring(L, 3), 
+	    (int) lua_rawlen(L, 3)) == OMOBUS_OK ) {
+	lua_pushboolean(L, 0); // err = false
+    } else {
+	lua_pushboolean(L, 1); // err = true
+    }
+    return 1;
+}
+
 static int luaftp_authtls(lua_State *L)
 {
     ftp_ctx_t *data;
@@ -189,6 +202,7 @@ static const luaL_Reg ftp_funcs2[] = {
     { "nlst", luaftp_nlst },
     { "size", luaftp_size },
     { "retr", luaftp_retr },
+    { "stor", luaftp_stor },
     { "authtls", luaftp_authtls },
     { "ccc", luaftp_ccc },
     { "prot", luaftp_prot },
