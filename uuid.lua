@@ -146,8 +146,6 @@ end
 ----------------------------------------------------------------------------
 -- Seeds the random generator.
 -- @usage
--- local socket = require("socket")  -- gettime() has higher precision than os.time()
--- -- LuaSocket loaded, so below line does the same as the example from randomseed()
 -- uuid.seed()
 -- print("here's a new uuid: ",uuid())
 function M.seed()
