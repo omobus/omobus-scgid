@@ -1,10 +1,15 @@
 # Copyright (c) 2006 - 2022 omobus-scgid authors, see the included COPYRIGHT file.
 
+# Compile using debug mode
+DEBUG 		?= no
+
 # Uncomment to change default prefix (/usr/local/omobus)
 PREFIX		?= /usr/local
 
 # Use thread-caching malloc (experimental).
 USE_TCMALLOC	?= no
+# Use jemalloc
+USE_JEMALLOC	?= no
 
 # Build OpenLDAP binding module.
 USE_LDAP 	?= yes

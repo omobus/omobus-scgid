@@ -62,7 +62,10 @@ end
 -- random seed is properly set. The module table itself is a shortcut to this
 -- function, so `my_uuid = uuid.new()` equals `my_uuid = uuid()`.
 -- @return a properly formatted uuid string
--- @param hwaddr (optional) string containing a unique hex value (e.g.: `00:0c:29:69:41:c6`), to be used to compensate for the lesser `math_random()` function. Use a mac address for solid results. If omitted, a fully randomized uuid will be generated, but then you must ensure that the random seed is set properly!
+-- @param hwaddr (optional) string containing a unique hex value (e.g.: `00:0c:29:69:41:c6`), 
+-- to be used to compensate for the lesser `math_random()` function. Use a mac address for solid
+-- results. If omitted, a fully randomized uuid will be generated, but then you must ensure that 
+-- the random seed is set properly!
 -- @usage
 -- local uuid = require("uuid")
 -- print("here's a new uuid: ",uuid())

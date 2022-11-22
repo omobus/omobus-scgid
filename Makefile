@@ -13,7 +13,7 @@ CHMOD		= chmod -v
 
 CURRENT_DATE 	:= $(shell sh -c 'date +%Y-%m-%d')
 PACKAGE_NAME 	= omobus-scgid
-PACKAGE_VERSION = 3.5.8
+PACKAGE_VERSION = 3.5.9
 COPYRIGHT 	= Copyright (c) 2006 - 2022 ak obs, ltd. <support@omobus.net>
 SUPPORT 	= Support and bug reports: <support@omobus.net>
 AUTHOR		= Author: Igor Artemov <i_artemov@omobus.net>
@@ -32,28 +32,33 @@ SHARE_PATH	= $(PREFIX)/share
 MAN1_PATH	= $(SHARE_PATH)/man/man1
 
 STRIPPED	= 
-TCMALLOC_VER	= 
-TCMALLOC_LINK	=
+MEM_INFO	= system
+MEM_LIB		=
 OPTIM 		=
 BUILD_RULES	= 
+
+ifeq ($(USE_JEMALLOC),yes)
+MEM_LIB	:= -ljemalloc
+MEM_INFO:= jecmalloc $(MEM_LIB)
+endif
 
 ifeq ($(DEBUG),yes)
 OPTIM = -g -ggdb -D_DEBUG
 ifeq ($(USE_TCMALLOC),yes)
-TCMALLOC_VER 	:= $(shell sh -c 'pkg-config --modversion libtcmalloc_debug 2> /dev/null')
-TCMALLOC_LINK 	:= $(shell sh -c 'pkg-config --libs libtcmalloc_debug 2> /dev/null')
+MEM_LIB	:= $(shell sh -c 'pkg-config --libs libtcmalloc_debug 2> /dev/null')
+MEM_INFO:= tcmalloc $(shell sh -c 'pkg-config --modversion libtcmalloc_debug 2> /dev/null') $(MEM_LIB)
 endif
 else
 OPTIM = -O2
 STRIPPED = -s
 ifeq ($(USE_TCMALLOC),yes)
-TCMALLOC_VER 	:= $(shell sh -c 'pkg-config --modversion libtcmalloc 2> /dev/null')
-TCMALLOC_LINK 	:= $(shell sh -c 'pkg-config --libs libtcmalloc 2> /dev/null')
+MEM_LIB	:= $(shell sh -c 'pkg-config --libs libtcmalloc 2> /dev/null')
+MEM_INFO:= tcmalloc $(shell sh -c 'pkg-config --modversion libtcmalloc_debug 2> /dev/null') $(MEM_LIB)
 endif
 endif
 
 CFLAGS		= -std=c99 -pedantic $(OPTIM) -fPIC -Wall -D_GNU_SOURCE -D__STDC_FORMAT_MACROS $(PROF)
-CCLINK		= $(TCMALLOC_LINK) -Wl,-rpath,$(LIB_PATH) 
+CCLINK		= -Wl,-rpath,$(LIB_PATH) 
 LDFLAGS		= -shared
 
 L_CORE_OBJ	= l_api.o l_code.o l_ctype.o l_debug.o l_do.o l_dump.o l_func.o l_gc.o l_lex.o \
@@ -100,11 +105,7 @@ all: luaengine $(PACKAGE_NAME) bind_dummy $(BUILD_RULES) \
 ifeq ($(DEBUG),yes)
 	@echo "**        debug build. . . . . . "$(PARAMCOLOR)"yes"$(ENDCOLOR)
 endif
-ifeq ($(TCMALLOC_VER),)
-	@echo "**        tcmalloc . . . . . . . no"
-else
-	@echo "**        tcmalloc . . . . . . . "$(PARAMCOLOR)$(TCMALLOC_VER)", link: "$(TCMALLOC_LINK)$(ENDCOLOR)
-endif
+	@echo "**        malloc/free. . . . . . "$(PARAMCOLOR)$(MEM_INFO)$(ENDCOLOR)
 	@echo "** "
 	@echo "**    Binding modules:"
 ifeq ($(USE_LDAP),yes)
@@ -142,6 +143,7 @@ help:
 	@echo ""
 	@echo "Parameters:"
 	@echo "  DEGUG=yes|no           Build debug version (default: no)."
+	@echo "  USE_JEMALLOC=yes|no    Use jemalloc allocator library (default: no)."
 	@echo "  USE_TCMALLOC=yes|no    Use thread-caching malloc (experimental) (default: no)."
 	@echo "  USE_LDAP=yes|no        Build OpenLDAP binding module (default: yes)."
 	@echo "  USE_PGSQL=yes|no       Build PostgreSQL binding module (default: yes)."
@@ -188,7 +190,7 @@ package_params:
 luaengine: $(L_CORE_LIB) $(L_LIBS_LIB)
 
 $(L_CORE_LIB): package_params $(L_CORE_OBJ)
-	$(CC) $(LDFLAGS) -o $(L_CORE_SHARED) -Wl,-soname,$(L_CORE_LIB) $(L_CORE_OBJ) -lrt
+	$(CC) $(LDFLAGS) -o $(L_CORE_SHARED) -Wl,-soname,$(L_CORE_LIB) $(L_CORE_OBJ) -lrt $(MEM_LIB)
 	$(LN) $(L_CORE_SHARED) $(L_CORE_LIB)
 
 $(L_LIBS_LIB): $(L_CORE_LIB) $(L_LIBS_OBJ)
@@ -196,19 +198,19 @@ $(L_LIBS_LIB): $(L_CORE_LIB) $(L_LIBS_OBJ)
 	$(RANLIB) $(L_LIBS_LIB)
 
 $(PACKAGE_NAME): $(L_LIBS_LIB) $(OMOBUS_SCGID_OBJ)
-	$(CC) -o $(PACKAGE_NAME) $(CCLINK) $(OMOBUS_SCGID_OBJ) $(L_CORE_LIB) $(L_LIBS_LIB) -pthread -lz -lbz2 -lcrypto -lssl -lrt -lm -ldl
+	$(CC) -o $(PACKAGE_NAME) $(CCLINK) $(OMOBUS_SCGID_OBJ) $(L_CORE_LIB) $(L_LIBS_LIB) -pthread -lz -lbz2 -lcrypto -lssl -lrt -lm -ldl $(MEM_LIB)
 
 bind_dummy: $(L_CORE_LIB) $(BIND_DUMMY_OBJ)
-	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_DUMMY_OBJ) $(L_CORE_LIB) -lrt
+	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_DUMMY_OBJ) $(L_CORE_LIB) -lrt $(MEM_LIB)
 
 bind_ldap: $(L_CORE_LIB) $(BIND_LDAP_OBJ)
-	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_LDAP_OBJ) $(L_CORE_LIB) -lldap -lrt
+	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_LDAP_OBJ) $(L_CORE_LIB) -lldap -lrt $(MEM_LIB)
 
 bind_pgsql: $(L_CORE_LIB) $(BIND_PGSQL_OBJ)
-	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_PGSQL_OBJ) $(L_CORE_LIB) -lpq -lrt
+	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_PGSQL_OBJ) $(L_CORE_LIB) -lpq -lrt $(MEM_LIB)
 
 bind_tds: $(L_CORE_LIB) $(BIND_TDS_OBJ)
-	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_TDS_OBJ) $(L_CORE_LIB) -lsybdb -lrt
+	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_TDS_OBJ) $(L_CORE_LIB) -lsybdb -lrt $(MEM_LIB)
 
 install: all
 	$(INSTALL) -v -D $(STRIPPED) $(L_CORE_SHARED) $(LIB_PATH)/$(L_CORE_SHARED)
