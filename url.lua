@@ -49,7 +49,6 @@ local legal = {
 }
 
 local function decode(str)
-    local str = str:gsub('+', ' ')
     return (str:gsub("%%(%x%x)", function(c)
 	    return string.char(tonumber(c, 16))
 	end))
@@ -61,10 +60,8 @@ local function encode(str)
 	end))
 end
 
--- for query values, prefer + instead of %20 for spaces
 local function encodeValue(str)
-    local str = encode(str)
-    return str:gsub('%%20', '+')
+    return encode(str)
 end
 
 local function encodeSegment(s)
