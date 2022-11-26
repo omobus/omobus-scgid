@@ -2,12 +2,12 @@
 .\"     Title: omobus-scgid
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 10/24/2022
+.\"      Date: 11/26/2022
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "OMOBUS\-SCGID" "1" "10/24/2022" "\ \&" "\ \&"
+.TH "OMOBUS\-SCGID" "1" "11/26/2022" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ omobus-scgid \- scgi environment for executing server\-side Lua scripts\&.
 omobus\-scgid [OPTIONS] \-s unixsock script
 .SH "DESCRIPTION"
 .sp
-\fBomobus\-scgid\fR is a special scgi server for executing interactive server\-side Lua scripts in the special environment based on the Lua 5\&.2 engine\&. For security reasons not all Lua 5\&.2 functions are available in the \fBomobus\-scgid\fR environment\&.
+\fBomobus\-scgid\fR is a special scgi server for executing interactive server\-side Lua scripts in the special environment based on the Lua 5\&.3 engine\&. For security reasons not all Lua 5\&.3 functions are available in the \fBomobus\-scgid\fR environment\&.
 .SH "OPTIONS"
 .PP
 \fBsript\fR
@@ -99,7 +99,7 @@ print version and compile options\&.
 .RE
 .SH "LUA SCRIPT"
 .sp
-First off all, \fBomobus\-scgid\fR supports most (exept several I<unsafe and unsecure>) of the base Lua 5\&.2 functions that described on the official site http://www\&.lua\&.org/manual/5\&.2/\&. In addition \fBomobus\-scgid\fR implements special build\-in functions, predefine lua libraries and bindings\&.
+First off all, \fBomobus\-scgid\fR supports most (exept several I<unsafe and unsecure>) of the base Lua 5\&.3 functions that described on the official site http://www\&.lua\&.org/manual/5\&.3/\&. In addition \fBomobus\-scgid\fR implements special build\-in functions, predefine lua libraries and bindings\&.
 .sp
 Executed Lua scripts should contain startup function B<websvc_main> that returns function table or nil on error\&. Function table contains \fIrequest_handler\fR and \fIgc\fR parameres\&. \fIgc\fR is optional\&.
 .SS "websvc_main example"
@@ -145,16 +145,6 @@ For security reasons this functions not available in the \fBomobus\-scgid\fR env
 .sp
 All other Lua functions available without any limitations\&.
 .SS "BUILD\-IN functions"
-.PP
-\fBiif(exp, ontrue, onfalse)\fR
-.RS 4
-Returns
-\fIontrue\fR
-if
-\fIexp\fR
-is true otherwise returns
-\fIonfalse\fR\&.
-.RE
 .PP
 \fBresponseWrite(res, string)\fR
 .RS 4

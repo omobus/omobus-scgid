@@ -13,8 +13,8 @@ omobus-scgid [OPTIONS] -s unixsock script
 DESCRIPTION
 -----------
 *omobus-scgid* is a special scgi server for executing interactive server-side Lua 
-scripts in the special environment based on the Lua 5.2 engine. For security reasons
-not all Lua 5.2 functions are available in the *omobus-scgid* environment.
+scripts in the special environment based on the Lua 5.3 engine. For security reasons
+not all Lua 5.3 functions are available in the *omobus-scgid* environment.
 
 OPTIONS
 -------
@@ -54,7 +54,7 @@ OPTIONS
 LUA SCRIPT
 ----------
 First off all, *omobus-scgid* supports most (exept several I<unsafe and unsecure>) 
-of the base Lua 5.2 functions that described on the official site <http://www.lua.org/manual/5.2/>.
+of the base Lua 5.3 functions that described on the official site <http://www.lua.org/manual/5.3/>.
 In addition *omobus-scgid* implements special build-in functions, predefine lua 
 libraries and bindings.
 
@@ -99,9 +99,6 @@ All other Lua functions available without any limitations.
 
 BUILD-IN functions
 ~~~~~~~~~~~~~~~~~~
-*iif(exp, ontrue, onfalse)*::
-    Returns _ontrue_ if _exp_ is true otherwise returns _onfalse_.
-
 *responseWrite(res, string)*::
     Writes string to the response stream.
 
