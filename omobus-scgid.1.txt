@@ -30,23 +30,26 @@ OPTIONS
 *-d*::
     Start *omobus-scgid* in the debug mode: without daemonize and redirect logs to the stdout.
 
-*-x*::
-    Start *omobus-scgid* in the systemd mode: without daemonize.
-
 *-g gid*::
     group (id or name) to run as.
 
+*-j timeout*::
+    Job script execution timeout in seconds, if not defined, job script doesn't executed..
+
 *-n evname*::
-    GC semaphore name;
+    GC semaphore name.
 
 *-p pifile*::
     pid-file name.
 
 *-t timeout*::
-    GC execution timeout;
+    GC script execution timeout in minutes.
 
 *-u uid*::
     user (id or name) to run as.
+
+*-x*::
+    Start *omobus-scgid* in the systemd mode: without daemonize.
 
 *-V*::
     print version and compile options.

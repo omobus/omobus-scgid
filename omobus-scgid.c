@@ -98,8 +98,8 @@ static const luaL_Reg preloadedlibs[] = {
     { NULL, NULL }
 };
 
-static short _gc_stop_flag = 0;
-static sem_t *_gc_sem = NULL;
+static short _task_stop_flag = 0;
+static sem_t *_task_sem = NULL;
 
 static
 void print_usage() {
@@ -113,12 +113,13 @@ void print_usage() {
 	"OPTIONS:\n"
 	"  -c jaildir  - chroot directory for request handlers;\n"
 	"  -d          - debug mode (without daemonize; redirect logs to the stdout);\n"
-	"  -x          - systemd service (without daemonize);\n"
 	"  -g group    - group (id or name) to run as;\n"
+	"  -j timeout  - job script execute timeout in seconds;\n"
 	"  -n evname   - GC semaphore name;\n"
 	"  -p pidfile  - pid-file name;\n"
-	"  -t timeout  - GC execute timeout in minutes;\n"
+	"  -t timeout  - GC script execute timeout in minutes;\n"
 	"  -u user     - user (id or name) to run as;\n"
+	"  -x          - systemd service (without daemonize);\n"
 	"  -V          - print version and compile options.\n\n"
 	"Report bugs to <" PACKAGE_BUGREPORT ">.\n"
     );
@@ -774,7 +775,7 @@ int luaengine_execute_rh(lua_State *ctx, scgi_request_t *scgi, FILE *f)
     lua_getfield(ctx, -1, "request_handler");
 
     if( lua_isnoneornil(ctx, -1) || !lua_isfunction(ctx, -1) ) {
-	logmsg_e(JPREFIX "request handler entry point function does not exist");
+	logmsg_e(JPREFIX "request handler entry point function does not exist.");
 	return -1;
     }
 
@@ -810,7 +811,7 @@ int luaengine_execute_gc(lua_State *ctx)
     lua_getfield(ctx, -1, "gc");
 
     if( lua_isnoneornil(ctx, -1) || !lua_isfunction(ctx, -1) ) {
-	logmsg_e(JPREFIX "GC entry point function does not exist");
+	logmsg_e(JPREFIX "GC entry point function does not exist.");
 	return -1;
     }
     if( lua_pcall(ctx, 0, 0, 0) != LUA_OK ) {
@@ -821,12 +822,33 @@ int luaengine_execute_gc(lua_State *ctx)
     return 0;
 }
 
-static 
-void gc_stop_handler(int sig)
+static
+int luaengine_execute_job(lua_State *ctx)
 {
-    if( _gc_sem != NULL ) {
-	_gc_stop_flag = 1;
-	sem_post(_gc_sem);
+    if( ctx == NULL ) {
+	return -1;
+    }
+
+    lua_getfield(ctx, -1, "job");
+
+    if( lua_isnoneornil(ctx, -1) || !lua_isfunction(ctx, -1) ) {
+	logmsg_e(JPREFIX "job entry point function does not exist.");
+	return -1;
+    }
+    if( lua_pcall(ctx, 0, 0, 0) != LUA_OK ) {
+	logmsg_e(JPREFIX "job execution error: %s", lua_isnil(ctx, -1) ? "" : lua_tostring(ctx, -1));
+	return -1;
+    }
+
+    return 0;
+}
+
+static 
+void task_stophandler(int sig)
+{
+    if( _task_sem != NULL ) {
+	_task_stop_flag = 1;
+	sem_post(_task_sem);
     }
 }
 
@@ -841,7 +863,7 @@ int gc_loop(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, const cha
 
     rc = 0;
     sa.sa_flags = 0;
-    sa.sa_handler = gc_stop_handler;
+    sa.sa_handler = task_stophandler;
     sigemptyset(&sa.sa_mask);
     sigaddset(&sa.sa_mask, SIGINT);
     sigaddset(&sa.sa_mask, SIGQUIT);
@@ -850,14 +872,18 @@ int gc_loop(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, const cha
     memset(&ts, 0, sizeof(ts));
     timeout = gc_timeout == 0 ? -1 : gc_timeout*60*1000;
 
+    if( _task_sem != NULL ) {
+	logmsg_w(JPREFIX "(GC) task semaphore already initialized !!!");
+	_exit(-1);
+    }
     if( !strempty(gc_evname) ) {
 	snprintf(semname, charbufsize(semname), OMOBUS_IPCSEM_NAME, gc_evname);
-	if( (_gc_sem = sem_open(semname, O_CREAT, S_IRUSR|S_IWUSR, 0)) == SEM_FAILED ) {
+	if( (_task_sem = sem_open(semname, O_CREAT, S_IRUSR|S_IWUSR, 0)) == SEM_FAILED ) {
 	    logmsg_w(JPREFIX "(GC) sem_open(%s): %s", semname, strerror(errno));
 	    _exit(-1);
 	}
     } else {
-	if( (_gc_sem = (sem_t *) alloca(sizeof(sem_t))) == NULL || (rc = sem_init(_gc_sem, 0, 0)) == -1 ) {
+	if( (_task_sem = (sem_t *) alloca(sizeof(sem_t))) == NULL || (rc = sem_init(_task_sem, 0, 0)) == -1 ) {
 	    logmsg_w(JPREFIX "(GC) sem_init(): %s", strerror(errno));
 	    _exit(-1);
 	}
@@ -879,15 +905,15 @@ int gc_loop(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, const cha
     sigaction(SIGUSR1, &sa, NULL);
 
     logmsg_i("GC semaphore=%s, timeout=%dm started.", strempty(gc_evname) ? "(internal)" : gc_evname, gc_timeout);
-    while( _gc_stop_flag == 0 && rc == 0 ) {
+    while( _task_stop_flag == 0 && rc == 0 ) {
 	make_abstimeout(0, &ts);
 	// Drop semaphore count to nil.
-	while( sem_timedwait(_gc_sem, &ts) == 0 )
+	while( sem_timedwait(_task_sem, &ts) == 0 )
 	    ;
 	// Waiting for external event.
 	make_abstimeout(timeout, &ts);
-	if( (rc = sem_timedwait(_gc_sem, &ts)) == 0 || errno == ETIMEDOUT ) {
-	    if( _gc_stop_flag == 0 ) {
+	if( (rc = sem_timedwait(_task_sem, &ts)) == 0 || errno == ETIMEDOUT ) {
+	    if( _task_stop_flag == 0 ) {
 		logmsg_d(JPREFIX "(GC) garbage collection is launched.");
 		rc = luaengine_execute_gc(ctx);
 		logmsg_d(JPREFIX "(GC) garbage collection is %s.", rc >= 0 ? "accomplished" : "failed");
@@ -901,12 +927,84 @@ int gc_loop(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, const cha
 	}
     }
     if( gc_evname != NULL && *gc_evname != '\0' ) {
-	sem_close(_gc_sem);
+	sem_close(_task_sem);
 	//sem_unlink(semname);
     } else {
-	sem_destroy(_gc_sem);
+	sem_destroy(_task_sem);
     }
-    _gc_sem = NULL;
+    _task_sem = NULL;
+    luaengine_destroy(ctx);
+
+    return rc;
+}
+
+static
+int job_loop(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, unsigned int job_timeout)
+{
+    int rc;
+    struct sigaction sa;
+    struct timespec ts;
+    uint32_t timeout = -1;
+
+    rc = 0;
+    sa.sa_flags = 0;
+    sa.sa_handler = task_stophandler;
+    sigemptyset(&sa.sa_mask);
+    sigaddset(&sa.sa_mask, SIGINT);
+    sigaddset(&sa.sa_mask, SIGQUIT);
+    sigaddset(&sa.sa_mask, SIGTERM);
+    sigaddset(&sa.sa_mask, SIGUSR1);
+    memset(&ts, 0, sizeof(ts));
+    timeout = job_timeout*1000;
+
+    if( _task_sem != NULL ) {
+	logmsg_w(JPREFIX "(job) task semaphore already initialized !!!");
+	_exit(-1);
+    }
+    if( (_task_sem = (sem_t *) alloca(sizeof(sem_t))) == NULL || (rc = sem_init(_task_sem, 0, 0)) == -1 ) {
+	logmsg_w(JPREFIX "(job) sem_init(): %s", strerror(errno));
+	_exit(-1);
+    }
+    if( jaildir != NULL && *jaildir != '\0' ) {
+	if( chroot(jaildir) == -1 || chdir("/") == -1 ) {
+	    logmsg_w(JPREFIX "(job) chroot(%s) faild: %s", jaildir, strerror(errno));
+	    _exit(-1);
+	}
+    }
+    if( setident(uid, gid) == -1 ) {
+	logmsg_w(JPREFIX "(job) unable to change user or group: %s", strerror(errno));
+	_exit(-1);
+    }
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGUSR1, &sa, NULL);
+
+    logmsg_i("job timeout=%ds started.", job_timeout);
+    while( _task_stop_flag == 0 && rc == 0 ) {
+	make_abstimeout(0, &ts);
+	// Drop semaphore count to nil.
+	while( sem_timedwait(_task_sem, &ts) == 0 )
+	    ;
+	// Waiting for external event.
+	make_abstimeout(timeout, &ts);
+	if( (rc = sem_timedwait(_task_sem, &ts)) == 0 || errno == ETIMEDOUT ) {
+	    if( _task_stop_flag == 0 ) {
+		logmsg_d(JPREFIX "(job) task script is launched.");
+		rc = luaengine_execute_job(ctx);
+		logmsg_d(JPREFIX "(job) task script is %s.", rc >= 0 ? "accomplished" : "failed");
+	    } else {
+		rc = 0;
+	    }
+	} else if( errno == EINTR /*interrupted by a signal handler*/ ) {
+	    rc = 0;
+	} else {
+	    logmsg_e(JPREFIX "(job) sem_timedwait(): %s", strerror(errno));
+	}
+    }
+    sem_destroy(_task_sem);
+    _task_sem = NULL;
     luaengine_destroy(ctx);
 
     return rc;
@@ -986,7 +1084,7 @@ int child_loop(lua_State *ctx, int sockfd, uid_t uid, gid_t gid, const char *jai
 }
 
 static
-int main_loop(const char *script, lua_State *ctx, const char *unixsock, uid_t uid, gid_t gid, const char *jaildir, int gc_pid)
+int main_loop(const char *script, lua_State *ctx, const char *unixsock, uid_t uid, gid_t gid, const char *jaildir)
 {
     short stopflag;
     int sigfd, sockfd, clifd, rc, i, pid/*, status*/;
@@ -1049,30 +1147,6 @@ int main_loop(const char *script, lua_State *ctx, const char *unixsock, uid_t ui
 			    case SIGUSR1:
 				stopflag = 1;
 				break;
-/* POSIX.1-2001: automaticaly collects zombie process
-			    case SIGCHLD:
-				status = 0;
-				//logmsg_d(JPREFIX "SIGCHLD (pid=%d)", fdsi.ssi_pid);
-				if( waitpid(fdsi.ssi_pid, &status, WNOHANG) < 0 ) {
-				    logmsg_w(JPREFIX "unable to waitpid(pid=%d): %s", fdsi.ssi_pid, strerror(errno));
-				} else if( WIFEXITED(status) ) {
-				    logmsg(WCOREDUMP(status) || WEXITSTATUS(status) != 0 ? LOG_WARNING : LOG_DEBUG, 
-					JPREFIX "%s process (pid=%d) exited%s with status %d",
-					fdsi.ssi_pid == gc_pid ? "GC" : "request handler",
-					fdsi.ssi_pid, 
-					WCOREDUMP(status) ? " and dumped core" : "", 
-					WEXITSTATUS(status));
-				} else if( WIFSTOPPED(status) ) {
-				    logmsg_w(JPREFIX "%s process (pid=%d) stopped by signal %d",
-					fdsi.ssi_pid == gc_pid ? "GC" : "request handler",
-					fdsi.ssi_pid, WSTOPSIG(status));
-				} else if( WIFSIGNALED(status) ) {
-				    logmsg_w(JPREFIX "%s process (pid=%d) signalled by signal %d",
-					fdsi.ssi_pid == gc_pid ? "GC" : "request handler",
-					fdsi.ssi_pid, WTERMSIG(status));
-				}
-				break;
-*/
 			    }
 			}
 		    }
@@ -1091,7 +1165,6 @@ int main_loop(const char *script, lua_State *ctx, const char *unixsock, uid_t ui
 
     return rc < 0 ? rc : 0;
 }
-
 
 static
 int gc(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, const char *gc_evname, unsigned int gc_timeout, int *gc_pid)
@@ -1115,6 +1188,33 @@ int gc(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, const char *gc
 	} else {
 	    if( gc_pid != NULL ) {
 		*gc_pid = pid;
+	    }
+	}
+    }
+
+    return rc;
+}
+
+static
+int job(lua_State *ctx, uid_t uid, gid_t gid, const char *jaildir, unsigned int job_timeout, int *job_pid)
+{
+    int pid, rc;
+
+    rc = 0;
+    if( job_timeout > 0 ) {
+	if( (pid = fork()) < 0 ) {
+	    logmsg_e(JPREFIX "(job) unable to fork: %s", strerror(errno));
+	    rc = -1;
+	} else if( pid == 0 ) {
+	    pid = getpid();
+	    setproctitle(PACKAGE_NAME ": job timeout=%ds", job_timeout);
+	    logmsg_i("job timeout=%ds starting up.", job_timeout);
+	    rc = job_loop(ctx, uid, gid, jaildir, job_timeout);
+	    logmsg_i("job timeout=%ds stopped.", job_timeout);
+	    _exit(rc);
+	} else {
+	    if( job_pid != NULL ) {
+		*job_pid = pid;
 	    }
 	}
     }
@@ -1286,19 +1386,26 @@ const char *getswd(const char *script, char *buf, size_t size)
     return buf;
 }
 
+static
+void kill_child(int pid) {
+    if( pid > 0 ) {
+	kill(pid, SIGUSR1);
+    }
+}
+
 int main(int argc, char**argv)
 {
     char unixsock[108] = "", pidfile[255] = "", script[255] = "", jaildir[255] = "", 
 	homedir[255] = "", gc_evname[255] = "";
     short daemonize = 1, debug = 0;
-    int opt = -1, fd = -1, rc = 0, gc_pid = -1;
-    unsigned int gc_timeout = 0;
+    int opt = -1, fd = -1, rc = 0, gc_pid = -1, job_pid = -1;
+    unsigned int gc_timeout = 0, job_timeout = 0;
     uid_t uid = 0;
     gid_t gid = 0;
     lua_State *ctx = NULL;
 
     if( argc > 1 ) {
-	while( (opt = getopt (argc, argv, "c:dxg:n:p:s:t:u:Vh?")) != -1) {
+	while( (opt = getopt (argc, argv, "c:dxg:j:n:p:s:t:u:Vh?")) != -1) {
 	    if( opt == 'c' ) {
 		snprintf(jaildir, charbufsize(jaildir), "%s", optarg);
 	    } else if( opt == 'd' ) {
@@ -1324,6 +1431,8 @@ int main(int argc, char**argv)
 		snprintf(gc_evname, charbufsize(gc_evname), "%s", optarg);
 	    } else if( opt == 't' ) {
 		gc_timeout = strtoul(optarg, NULL, 0);
+	    } else if( opt == 'j' ) {
+		job_timeout = strtoul(optarg, NULL, 0);
 	    } else if( opt == 'V' ) {
 		print_version();
 		exit(0);
@@ -1352,10 +1461,11 @@ int main(int argc, char**argv)
 	initproctitle(argc, argv);
 	setproctitle(PACKAGE_NAME ": unixsock=%s, script=%s", unixsock, script);
 	if( (rc = gc(ctx, uid, gid, jaildir, gc_evname, gc_timeout, &gc_pid)) != -1 ) {
-	    rc = main_loop(script, ctx, unixsock, uid, gid, jaildir, gc_pid);
-	    if( gc_pid > 0 ) {
-		kill(gc_pid, SIGUSR1);
+	    if( (rc = job(ctx, uid, gid, jaildir, job_timeout, &job_pid)) != -1 ) {
+		rc = main_loop(script, ctx, unixsock, uid, gid, jaildir);
 	    }
+	    kill_child(job_pid);
+	    kill_child(gc_pid);
 	}
 	luaengine_destroy(ctx);
     }
