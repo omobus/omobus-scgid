@@ -49,6 +49,7 @@ local legal = {
 }
 
 local function decode(str)
+    local str = str:gsub('+', ' ')
     return (str:gsub("%%(%x%x)", function(c)
 	    return string.char(tonumber(c, 16))
 	end))
