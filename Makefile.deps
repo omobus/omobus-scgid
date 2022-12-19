@@ -78,6 +78,7 @@ lib_sock.o: lib_sock.c omobus-scgid.h connect_timed.h tls.h lua.h \
  luaconf.h luaaux.h
 lib_string.o: lib_string.c strtrim.h lua.h luaconf.h luaaux.h
 lib_table.o: lib_table.c lua.h luaconf.h luaaux.h
+lib_thumb.o: lib_thumb.c thumb.h lua.h luaconf.h luaaux.h
 lib_utf8.o: lib_utf8.c l_prefix.h lua.h luaconf.h luaaux.h
 lib_zlib.o: lib_zlib.c lua.h luaconf.h luaaux.h
 lsdir.o: lsdir.c lsdir.h omobus-scgid.h
@@ -89,5 +90,6 @@ omobus-scgid.o: omobus-scgid.c omobus-scgid.h setproctitle.h \
 setproctitle.o: setproctitle.c setproctitle.h
 sha1.o: sha1.c sha1.h
 strtrim.o: strtrim.c strtrim.h
+thumb.o: thumb.c thumb.h
 tls.o: tls.c tls.h memdup.h omobus-scgid.h
 xxhash.o: xxhash.c xxhash.h

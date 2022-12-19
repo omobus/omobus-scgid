@@ -71,6 +71,7 @@ LUAMOD_API int luaopen_bzlib(lua_State *L);
 LUAMOD_API int luaopen_json(lua_State *L);
 LUAMOD_API int luaopen_json_safe(lua_State *L);
 LUAMOD_API int luaopen_sock(lua_State *L);
+LUAMOD_API int luaopen_thumb(lua_State *L);
 
 static const luaL_Reg loadedlibs[] = {
     { "_G", luaopen_base },
@@ -92,9 +93,10 @@ static const luaL_Reg loadedlibs[] = {
 };
 
 static const luaL_Reg preloadedlibs[] = {
-    { "iconv", luaopen_iconv },
-    { "zlib", luaopen_zlib },
     { "bzlib", luaopen_bzlib },
+    { "iconv", luaopen_iconv },
+    { "thumb", luaopen_thumb },
+    { "zlib", luaopen_zlib },
     { NULL, NULL }
 };
 

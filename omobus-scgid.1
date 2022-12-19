@@ -2,12 +2,12 @@
 .\"     Title: omobus-scgid
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 11/26/2022
+.\"      Date: 12/19/2022
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "OMOBUS\-SCGID" "1" "11/26/2022" "\ \&" "\ \&"
+.TH "OMOBUS\-SCGID" "1" "12/19/2022" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -61,21 +61,19 @@ Start
 in the debug mode: without daemonize and redirect logs to the stdout\&.
 .RE
 .PP
-\fB\-x\fR
-.RS 4
-Start
-\fBomobus\-scgid\fR
-in the systemd mode: without daemonize\&.
-.RE
-.PP
 \fB\-g gid\fR
 .RS 4
 group (id or name) to run as\&.
 .RE
 .PP
+\fB\-j timeout\fR
+.RS 4
+Job script execution timeout in seconds, if not defined, job script doesn\(cqt executed\&.\&.
+.RE
+.PP
 \fB\-n evname\fR
 .RS 4
-GC semaphore name;
+GC semaphore name\&.
 .RE
 .PP
 \fB\-p pifile\fR
@@ -85,12 +83,19 @@ pid\-file name\&.
 .PP
 \fB\-t timeout\fR
 .RS 4
-GC execution timeout;
+GC script execution timeout in minutes\&.
 .RE
 .PP
 \fB\-u uid\fR
 .RS 4
 user (id or name) to run as\&.
+.RE
+.PP
+\fB\-x\fR
+.RS 4
+Start
+\fBomobus\-scgid\fR
+in the systemd mode: without daemonize\&.
 .RE
 .PP
 \fB\-V\fR
@@ -370,6 +375,44 @@ is a key/value array that describes HTTP header\&.
 \fBscgi\&.writeBody(stream, str)\fR
 .RS 4
 Writes HTTP body stryng to the response *stream_\&.
+.RE
+.PP
+\fBthumb\&.encode(jpegImage, targetHeight, targetQuality)\fR
+.RS 4
+Create thumbnail image from original JPEG data\&. Returns (1) table with result thumbnail, or nil if error occured, (2) optional boolean flag if error ocuured and (3) error message\&. Result table contains following keys:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+data: encoded JPEG data;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+width, height: image dimensions;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+shaleFactor: scale factor of the result image\&.
+.RE
 .RE
 .PP
 \fBurl\&.buildQuery(tab, sep, key)\fR

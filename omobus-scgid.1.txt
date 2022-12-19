@@ -214,6 +214,20 @@ BUILD-IN functions
 *scgi.writeBody(stream, str)*::
     Writes HTTP body stryng to the response *stream_.
 
+*thumb.encode(jpegImage, targetHeight, targetQuality)*::
+    Create thumbnail image from original JPEG data. Returns (1) table with result thumbnail,
+    or nil if error occured, (2) optional boolean flag if error ocuured and (3) error message.
+    Result table contains following keys:
+
+    * data:
+	encoded JPEG data;
+
+    * width, height:
+	image dimensions;
+
+    * shaleFactor: 
+	scale factor of the result image.
+
 *url.buildQuery(tab, sep, key)*::
     Build query string from _tab_ key/value parameters. Separator and parent key is 
     optional. Returns a string representing the built querystring.
