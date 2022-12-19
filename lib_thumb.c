@@ -75,22 +75,23 @@ static int thumb_encode(lua_State *L)
 	    epeg_quality_set(im, quality);
 	    epeg_memory_output_set(im, &thumb, &thumbSize);
 	    epeg_encode(im);
+
+	    if( thumb != NULL && thumbSize > 0 ) {
+		lua_createtable(L, 0, 4);  /* 4 = number of fields */
+		setdoublefield(L, "scaleFactor", (double)height / (double)h);
+		setintegerfield(L, "width", width);
+		setintegerfield(L, "height", height);
+		setrawfield(L, "data", (const char *) thumb, thumbSize);
+		rc = 1;
+	    } else {
+		lua_pushnil(L);
+		lua_pushboolean(L, 1);
+		lua_pushstring(L, "unable to encode JPEG data to thumbnail image");
+		rc = 3;
+	    }
 	}
 	epeg_close(im);
 
-	if( thumb != NULL && thumbSize > 0 ) {
-	    lua_createtable(L, 0, 4);  /* 4 = number of fields */
-	    setdoublefield(L, "scaleFactor", (double)height / (double)h);
-	    setintegerfield(L, "width", width);
-	    setintegerfield(L, "height", height);
-	    setrawfield(L, "data", (const char *) thumb, thumbSize);
-	    rc = 1;
-	} else {
-	    lua_pushnil(L);
-	    lua_pushboolean(L, 1);
-	    lua_pushstring(L, "unable to encode JPEG data to thumbnail image");
-	    rc = 3;
-	}
 	if( thumb != NULL ) {
 	    free(thumb);
 	    thumb = NULL;
