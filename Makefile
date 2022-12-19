@@ -13,7 +13,7 @@ CHMOD		= chmod -v
 
 CURRENT_DATE 	:= $(shell sh -c 'date +%Y-%m-%d')
 PACKAGE_NAME 	= omobus-scgid
-PACKAGE_VERSION = 3.5.9
+PACKAGE_VERSION = 3.5.10
 COPYRIGHT 	= Copyright (c) 2006 - 2022 ak obs, ltd. <support@omobus.net>
 SUPPORT 	= Support and bug reports: <support@omobus.net>
 AUTHOR		= Author: Igor Artemov <i_artemov@omobus.net>
@@ -65,9 +65,9 @@ L_CORE_OBJ	= l_api.o l_code.o l_ctype.o l_debug.o l_do.o l_dump.o l_func.o l_gc.
 		  l_mem.o l_object.o l_opcodes.o l_parser.o l_state.o l_string.o l_table.o l_tm.o \
 		  l_undump.o l_vm.o l_zio.o l_aux.o 
 L_LIBS_OBJ	= fwrite_safe.o crc32.o crc64.o md5.o sha1.o xxhash.o base64.o strtrim.o dynarray.o hashtable.o \
-		  memdup.o connect_timed.o lsdir.o tls.o ftp.o \
+		  memdup.o connect_timed.o lsdir.o tls.o ftp.o thumb.o \
 		  lib_base.o lib_utf8.o lib_debug.o lib_math.o lib_string.o lib_table.o lib_coro.o lib_package.o \
-		  lib_os.o lib_iconv.o lib_hash.o lib_zlib.o lib_bzip2.o lib_json.o lib_ftp.o lib_sock.o
+		  lib_os.o lib_iconv.o lib_hash.o lib_zlib.o lib_bzip2.o lib_json.o lib_ftp.o lib_sock.o lib_thumb.o
 OMOBUS_SCGID_OBJ= omobus-scgid.o setproctitle.o make_abstimeout.o
 BIND_DUMMY_OBJ	= bind_dummy.o
 BIND_LDAP_OBJ	= bind_ldap.o
@@ -198,7 +198,8 @@ $(L_LIBS_LIB): $(L_CORE_LIB) $(L_LIBS_OBJ)
 	$(RANLIB) $(L_LIBS_LIB)
 
 $(PACKAGE_NAME): $(L_LIBS_LIB) $(OMOBUS_SCGID_OBJ)
-	$(CC) -o $(PACKAGE_NAME) $(CCLINK) $(OMOBUS_SCGID_OBJ) $(L_CORE_LIB) $(L_LIBS_LIB) -pthread -lz -lbz2 -lcrypto -lssl -lrt -lm -ldl $(MEM_LIB)
+	$(CC) -o $(PACKAGE_NAME) $(CCLINK) $(OMOBUS_SCGID_OBJ) $(L_CORE_LIB) $(L_LIBS_LIB) -pthread -lz -lbz2 -lcrypto -lssl \
+	    -lexif -ljpeg -lrt -lm -ldl $(MEM_LIB)
 
 bind_dummy: $(L_CORE_LIB) $(BIND_DUMMY_OBJ)
 	$(CC) -o $@.so $(CCLINK) $(LDFLAGS) -Wl,-soname,$@.so $(BIND_DUMMY_OBJ) $(L_CORE_LIB) -lrt $(MEM_LIB)
