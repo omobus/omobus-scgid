@@ -23,6 +23,8 @@
 #define closesocket			close
 #define sock_errno()			errno
 
+#define OMOBUS_FF_UNLOCKED		"__unlocked__"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
