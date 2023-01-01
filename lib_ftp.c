@@ -83,6 +83,30 @@ static int luaftp_cwd(lua_State *L)
     return 1;
 }
 
+static int luaftp_dele(lua_State *L)
+{
+    ftp_ctx_t *data;
+    if( (data = (ftp_ctx_t *) luaL_checkudata(L, 1, FTP_METATABLE)) != NULL && *data != NULL && 
+	ftp_dele(*data, luaL_checkstring(L, 2)) == OMOBUS_OK ) {
+	lua_pushboolean(L, 1);
+    } else {
+	lua_pushboolean(L, 0);
+    }
+    return 1;
+}
+
+static int luaftp_rename(lua_State *L)
+{
+    ftp_ctx_t *data;
+    if( (data = (ftp_ctx_t *) luaL_checkudata(L, 1, FTP_METATABLE)) != NULL && *data != NULL && 
+	ftp_rename(*data, luaL_checkstring(L, 2), luaL_checkstring(L, 3)) == OMOBUS_OK ) {
+	lua_pushboolean(L, 1);
+    } else {
+	lua_pushboolean(L, 0);
+    }
+    return 1;
+}
+
 static int luaftp_nlst(lua_State *L)
 {
     ftp_ctx_t *data; char *buf = NULL; int len = 0;
@@ -128,6 +152,20 @@ static int luaftp_retr(lua_State *L)
 }
 
 static int luaftp_stor(lua_State *L)
+{
+    ftp_ctx_t *data;
+    if( (data = (ftp_ctx_t *) luaL_checkudata(L, 1, FTP_METATABLE)) != NULL && *data != NULL &&
+	ftp_stor_mem(*data, luaL_checkstring(L, 2), (const char *) luaL_checkstring(L, 3), 
+	    (int) lua_rawlen(L, 3)) == OMOBUS_OK ) {
+	lua_pushboolean(L, 0); // err = false
+    } else {
+	lua_pushboolean(L, 1); // err = true
+    }
+    return 1;
+}
+
+
+static int luaftp_stor_safe(lua_State *L)
 {
     ftp_ctx_t *data;
     if( (data = (ftp_ctx_t *) luaL_checkudata(L, 1, FTP_METATABLE)) != NULL && *data != NULL &&
@@ -189,6 +227,31 @@ static int luaftp_cdc(lua_State *L)
     return 1;
 }
 
+static int luaftp_lockdir(lua_State *L)
+{
+    ftp_ctx_t *data;
+    if( (data = (ftp_ctx_t *) luaL_checkudata(L, 1, FTP_METATABLE)) != NULL && *data != NULL && 
+	ftp_lockdir(*data) == OMOBUS_OK ) {
+	lua_pushboolean(L, 1);
+    } else {
+	lua_pushboolean(L, 0);
+    }
+    return 1;
+}
+
+static int luaftp_unlockdir(lua_State *L)
+{
+    ftp_ctx_t *data;
+    if( (data = (ftp_ctx_t *) luaL_checkudata(L, 1, FTP_METATABLE)) != NULL && *data != NULL && 
+	ftp_unlockdir(*data) == OMOBUS_OK ) {
+	lua_pushboolean(L, 1);
+    } else {
+	lua_pushboolean(L, 0);
+    }
+    return 1;
+}
+
+
 static const luaL_Reg ftp_funcs[] = {
     { "connect", luaftp_connect },
     { NULL, NULL }
@@ -198,17 +261,22 @@ static const luaL_Reg ftp_funcs2[] = {
     { "quit", luaftp_quit },
     { "login", luaftp_login },
     { "feat", luaftp_feat },
+    { "dele", luaftp_dele },
+    { "rename", luaftp_rename },
     { "cwd", luaftp_cwd },
     { "nlst", luaftp_nlst },
     { "size", luaftp_size },
     { "retr", luaftp_retr },
     { "stor", luaftp_stor },
+    { "stor_safe", luaftp_stor_safe },
     { "authtls", luaftp_authtls },
     { "ccc", luaftp_ccc },
     { "prot", luaftp_prot },
     { "cdc", luaftp_cdc },
     { "disconnect", luaftp_disconnect },
     { "__gc", luaftp_disconnect },
+    { "lockdir", luaftp_lockdir },
+    { "unlockdir", luaftp_unlockdir },
     { NULL, NULL }
 };
 
@@ -223,6 +291,9 @@ static void createmeta(lua_State *L, const char *name, const luaL_Reg *funcs) {
 LUAMOD_API int luaopen_ftp(lua_State *L)
 {
     luaL_newlib(L, ftp_funcs);
+    lua_pushliteral(L, "OMOBUS_FF_UNLOCKED");
+    lua_pushstring(L, OMOBUS_FF_UNLOCKED);
+    lua_settable(L, -3);
     createmeta(L, FTP_METATABLE, ftp_funcs2);
     return 1;
 }

@@ -47,6 +47,10 @@ int ftp_ccc(ftp_ctx_t p); /* Clear Command Channel */
 int ftp_prot(ftp_ctx_t p); /* Protected Data Channel */
 int ftp_cdc(ftp_ctx_t p); /* Clear Data Channel */
 
+/* utility functions */
+int ftp_lockdir(ftp_ctx_t p);
+int ftp_unlockdir(ftp_ctx_t p);
+
 #ifdef __cplusplus
 } //extern "C"
 #endif

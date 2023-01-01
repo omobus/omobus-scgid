@@ -1038,7 +1038,7 @@ int ftp_stor_mem(ftp_ctx_t p, const char *fn, const char *buf, int size)
     memset(&sock, 0, sizeof(ftp_sock_t));
     sock.sockfd = SOCKET_ERROR;
 
-    if( (ctx = (ftp_ctx *) p) == NULL || fn == NULL || ctx->tr_err || buf == NULL || size <= 0 ) {
+    if( (ctx = (ftp_ctx *) p) == NULL || fn == NULL || ctx->tr_err ) {
 	return OMOBUS_ERR;
     }
     if( (newport = ctx->epsv?ftp_epsv(p):ftp_pasv(p)) == 0 ) {
@@ -1086,18 +1086,20 @@ int ftp_stor_mem(ftp_ctx_t p, const char *fn, const char *buf, int size)
 #endif //FTP_TRACE
     }
 
-    while( x > 0 ) {
-	ptr = ref; z = r = MIN(chunk, x);
-	while( r > 0 && (s = sock_send(&sock, ptr, r)) > 0 ) {
-	    r -= s; ptr += s;
+    if( buf != NULL && size > 0 ) {
+	while( x > 0 ) {
+	    ptr = ref; z = r = MIN(chunk, x);
+	    while( r > 0 && (s = sock_send(&sock, ptr, r)) > 0 ) {
+		r -= s; ptr += s;
+	    }
+	    if( s < 0 || r != 0 ) {
+		logmsg_e(JPREFIX "%s:%u unable to send %s file to the server.", 
+		    ctx->host, newport, fn);
+		ftp_disconnect_passive(ctx->log, &sock);
+		return OMOBUS_ERR;
+	    }
+	    ref += z; x -= z;
 	}
-	if( s < 0 || r != 0 ) {
-	    logmsg_e(JPREFIX "%s:%u unable to send %s file to the server.", 
-		ctx->host, newport, fn);
-	    ftp_disconnect_passive(ctx->log, &sock);
-	    return OMOBUS_ERR;
-	}
-	ref += z; x -= z;
     }
     ftp_disconnect_passive(ctx->log, &sock);
 
@@ -1412,4 +1414,16 @@ int ftp_cdc(ftp_ctx_t p)
     }
 
     return rc;
+}
+
+/* utility functions */
+
+int ftp_lockdir(ftp_ctx_t p)
+{
+    return ftp_dele(p, OMOBUS_FF_UNLOCKED);
+}
+
+int ftp_unlockdir(ftp_ctx_t p)
+{
+    return ftp_stor(p, OMOBUS_FF_UNLOCKED, NULL, NULL);
 }
