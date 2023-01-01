@@ -321,15 +321,6 @@ static int ll_require(lua_State *L) {
     return 1;
 }
 
-/* *** omobus-scgid: begin *** */
-static 
-void setpath(lua_State *L, const char *fieldname, const char *def) 
-{
-    lua_pushstring(L, def);  /* use default */
-    lua_setfield(L, -2, fieldname);
-}
-/* *** omobus-scgid: end *** */
-
 
 static const luaL_Reg pk_funcs[] = {
     { "loadlib", ll_loadlib },
@@ -371,10 +362,6 @@ LUAMOD_API int luaopen_package (lua_State *L)
     luaL_newlib(L, pk_funcs);
     createsearcherstable(L);
     lua_setfield(L, -2, "searchers");  /* put it in field 'searchers' */
-    /* set field 'path' */
-    //setpath(L, "path", LUA_PATH_DEFAULT);
-    /* set field 'cpath' */
-    //setpath(L, "cpath", LUA_CPATH_DEFAULT);
     /* store config information */
     lua_pushliteral(L, LUA_DIRSEP "\n" LUA_PATH_SEP "\n" LUA_PATH_MARK "\n"
 	LUA_IGMARK "\n");
